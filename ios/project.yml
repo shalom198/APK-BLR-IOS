@@ -19,12 +19,12 @@ targets:
       - path: HeatMind/Sources
       - path: HeatMind/Resources/Bridge.js
         buildPhase: resources
-      # קבצי ה-HTML/PNG משותפים עם פרויקט האנדרואיד — מקור אמת אחד.
-      - path: ../app/src/main/assets/login.html
+      # קבצי ה-HTML/PNG (עותק מקומי, מסונכרן מ-app/src/main/assets).
+      - path: HeatMind/Resources/web/login.html
         buildPhase: resources
-      - path: ../app/src/main/assets/espConfig.html
+      - path: HeatMind/Resources/web/espConfig.html
         buildPhase: resources
-      - path: ../app/src/main/assets/heatmind_app_icon_512.png
+      - path: HeatMind/Resources/web/heatmind_app_icon_512.png
         buildPhase: resources
     settings:
       base:

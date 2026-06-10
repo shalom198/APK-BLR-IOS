@@ -1,0 +1,5056 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <script>window.APP_VERSION = '1.1.1';</script>  <!-- 🔢 מספר גרסת האפליקציה — מעדכנים כאן בלבד -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ESP Control">
+    <meta name="theme-color" content="#bbf7d0">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json?v=7">
+
+
+    <!-- אייקונים ל-iOS -->
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
+
+    <title>ניהול בקרי דוד חכם</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #bbf7d0 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            direction: rtl;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+.header {
+            background: linear-gradient(135deg, #bbf7d0 0%, #4a9d4a 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .header-logo {
+            width: 70px;
+            height: 70px;
+            flex-shrink: 0;
+        }
+
+        .header-text {
+            text-align: right;
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 18px;
+            font-weight: 400;
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            transition: width 0.3s ease;
+        }
+
+        .user-bar {
+            background: var(--bg-light);
+            padding: 15px 30px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-bar.show {
+            display: flex;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 40px;
+            min-height: 400px;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-group input {
+            direction: ltr;
+            text-align: right;
+        }
+
+        .form-group select {
+            direction: rtl;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(110, 231, 183, 0.25);
+
+        }
+
+        .btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            border: 2px solid transparent;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-light);
+            border-color: #667eea;
+        }
+
+        .btn-full {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        .message {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .message.success {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+        }
+
+        .message.info {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+
+        .device-grid {
+            display: grid;
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .device-card {
+            background: var(--bg-light);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .device-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .device-card.selected {
+            border-color: #667eea;
+            background: #eff6ff;
+        }
+
+        .device-card.offline {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .device-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 18px;
+        }
+
+        .device-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .device-status.online {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .device-status.offline {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .device-id {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .toggle-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .toggle-link a:hover {
+            color: #4f46e5;
+            text-decoration: underline;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* רספונסיביות */
+        @media (max-width: 480px) {
+            .main-container {
+                margin: 10px;
+            }
+
+            .content {
+                padding: 24px;
+            }
+
+            .header {
+                padding: 24px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+
+        /* אנימציות מתקדמות */
+        .fade-transition {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .fade-out {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+
+        .fade-in {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+/* 📱 עיצוב רשימה נגללת למכשירים */
+
+/* מיכל הרשימה הנגללת */
+.device-scroll-container {
+    max-height: 120px; /* גובה מקסימלי */
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-light);
+    margin: 16px 0;
+    padding: 8px;
+    position: relative;
+}
+
+/* עיצוב הסקרול בר */
+.device-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.device-scroll-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.device-scroll-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.device-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* פריט בקר מוקטן */
+.device-item {
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    min-height: 60px;
+}
+
+.device-item:last-child {
+    margin-bottom: 0;
+}
+
+.device-item:hover {
+    border-color: #667eea;
+    background: #f8fafc;
+    transform: translateX(-2px);
+    box-shadow: 2px 0 8px rgba(102, 126, 234, 0.1);
+}
+
+.device-item.selected {
+    border-color: #667eea;
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.device-item.offline {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #f8f9fa;
+}
+
+.device-item.offline:hover {
+    transform: none;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+/* תוכן הפריט */
+.device-item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.device-item-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+.device-item-id {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    opacity: 0.8;
+}
+
+.device-item-status {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.device-item-status.online {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.device-item-status.offline {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* כותרת הרשימה */
+.device-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.device-list-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.device-count {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* פילטר/חיפוש */
+.device-search {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.device-search input {
+    width: 100%;
+    padding: 10px 40px 10px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    transition: border-color 0.2s ease;
+}
+
+.device-search input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.device-search .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 16px;
+    pointer-events: none;
+}
+
+/* אינדיקטור טעינה לרשימה */
+.device-list-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+/* הודעה כשאין תוצאות */
+.no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.no-results-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+/* מצב קומפקטי לרשימה ארוכה */
+.device-scroll-container.compact .device-item {
+    padding: 8px 12px;
+    min-height: 48px;
+}
+
+.device-scroll-container.compact .device-item-name {
+    font-size: 14px;
+}
+
+.device-scroll-container.compact .device-item-id {
+    font-size: 11px;
+}
+
+/* אנימציה לפריטים חדשים */
+@keyframes deviceItemSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.device-item.new-item {
+    animation: deviceItemSlideIn 0.3s ease;
+}
+
+/* עיצוב מיוחד לפריט נבחר */
+.device-item.selected::before {
+    content: '✓';
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #667eea;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* רספונסיביות */
+@media (max-width: 480px) {
+    .device-scroll-container {
+        max-height: 250px;
+        margin: 12px 0;
+        padding: 6px;
+    }
+
+    .device-item {
+        padding: 10px 12px;
+        min-height: 52px;
+    }
+
+    .device-item-name {
+        font-size: 15px;
+    }
+
+    .device-list-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .device-search {
+        order: -1;
+    }
+}
+
+
+.btn-esp-config {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: 2px solid transparent;
+        }
+
+        .btn-esp-config:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* עיצוב כפתור WiFi מעודכן */
+        .wifi-status-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #2196F3;
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+            transition: all 0.3s ease;
+            z-index: 9999;
+            font-size: 22px;
+            user-select: none;
+        }
+
+        .wifi-status-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.6);
+        }
+
+        .wifi-status-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* עיצוב טולטיפ מעודכן ויפה */
+        .wifi-tooltip {
+            position: absolute;
+            top: 60px; /* מתחת לכפתור */
+            right: 0;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 0.95));
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            direction: rtl;
+            min-width: 280px;
+            max-width: 340px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-weight: 400;
+            line-height: 1.5;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.15);
+            z-index: 10001;
+            transform: translateY(-10px) scale(0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .wifi-status-btn:hover .wifi-tooltip,
+        .wifi-tooltip.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0) scale(1) translateX(0);
+
+        }
+
+        /* כותרת הטולטיפ */
+        .wifi-tooltip-header {
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .wifi-tooltip-subtitle {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* סגנון רשימת רשתות */
+        .wifi-networks-list {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-bottom: 12px;
+            color: #e0e0e0;
+        }
+
+        .wifi-network-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 6px;
+            margin: 4px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .wifi-network-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateX(-2px);
+        }
+
+        .wifi-network-item:active {
+            transform: scale(0.98);
+        }
+
+        .wifi-network-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wifi-network-signal {
+            margin-right: 8px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .wifi-signal-strength {
+            opacity: 0.7;
+            font-size: 9px;
+        }
+
+        /* אייקונים */
+        .wifi-lock-icon {
+            font-size: 12px;
+        }
+
+        /* סקרול בר מעוצב */
+        .wifi-tooltip::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .wifi-tooltip::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+
+        .wifi-tooltip::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            transition: background 0.2s ease;
+        }
+
+        .wifi-tooltip::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* זמן עדכון */
+        .wifi-update-time {
+            font-size: 9px;
+            opacity: 0.5;
+            margin-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 6px;
+            text-align: center;
+            color: #cccccc;
+        }
+
+        /* הודעת "אין תוצאות" */
+        .no-networks {
+            font-size: 11px;
+            opacity: 0.7;
+            text-align: center;
+            padding: 12px 0;
+            color: #cccccc;
+        }
+
+        /* אינדיקטורים לעוצמת אות */
+        .wifi-icon {
+            position: relative;
+            font-size: 20px;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        }
+
+        .wifi-strong { 
+            color: #4CAF50; 
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .wifi-medium { 
+            color: #FF9800; 
+            text-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+        }
+
+        .wifi-weak { 
+            color: #F44336; 
+            text-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+        }
+
+        .wifi-disconnected { 
+            color: #9E9E9E; 
+            text-shadow: none;
+        }
+
+        /* אנימציה לעדכון */
+        .wifi-updating {
+            animation: wifiPulse 1.5s infinite;
+        }
+
+        @keyframes wifiPulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 8px 25px rgba(33, 150, 243, 0.6); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* התאמה למובייל */
+		@media (max-width: 768px) {
+			.wifi-status-btn {
+				top: 10px;  /* קרוב יותר לראש המסך */
+				right: 10px;
+				width: 50px; /* החזר לגודל מלא */
+				height: 50px;
+				font-size: 20px; /* גדול יותר */
+				border-width: 3px; /* עבה יותר */
+			}
+		}            
+		.wifi-tooltip {
+			font-size: 12px;
+			top: 55px;
+			min-width: 250px;
+			right: 0;
+			left: auto;
+			/* וודא שהוא לא יוצא מהמסך */
+			max-width: min(340px, calc(100vw - 80px));
+			padding: 12px;
+			transform: translateY(-10px) scale(0.95) translateX(10px);
+			transform-origin: top right; /* הוסף זה */
+
+		}
+
+		.wifi-network-item {
+			padding: 6px 4px;
+		}
+	}
+
+
+    </style>
+
+    <!-- ⚡ הסתרה מוקדמת של דף הלוגין כשעומדים לפתוח בקר אוטומטית -->
+    <script>
+    (function () {
+        try {
+            var params = new URLSearchParams(location.search);
+            // אפשרות דילוג מפורשת דרך ה-URL: login.html?noauto=1
+            if (params.get('noauto') === '1') return;
+
+            var saved = [];
+            var localAp = {};
+            try { saved   = JSON.parse(localStorage.getItem('savedControllers')  || '[]'); } catch (e) {}
+            try { localAp = JSON.parse(localStorage.getItem('savedApPasswords') || '{}'); } catch (e) {}
+
+            var hasCloud = Array.isArray(saved) && saved.length >= 1;
+            var hasLocal = localAp && Object.keys(localAp).length >= 1;
+            var hasOpenId = !!params.get('open');   // פתיחה ממוקדת של בקר שהוגדר
+
+            // נסתיר רק אם באמת נפתח משהו אוטומטית
+            if (!hasOpenId && !hasCloud && !hasLocal) return;
+
+            window.__AUTO_OPEN__ = true;
+
+            var st = document.createElement('style');
+            st.id = 'autoOpenHideStyle';
+            st.textContent =
+                '.main-container{visibility:hidden!important}' +
+                '#autoOpenSplash{position:fixed;inset:0;display:flex;flex-direction:column;' +
+                'align-items:center;justify-content:center;background:#0e3a2f;color:#fff;' +
+                'z-index:9990;font-family:Arial,Helvetica,sans-serif;gap:18px;text-align:center}' +
+                '#autoOpenSplash .ao-spin{width:46px;height:46px;border:4px solid rgba(255,255,255,.25);' +
+                'border-top-color:#fff;border-radius:50%;animation:aoSpin 1s linear infinite}' +
+                '@keyframes aoSpin{to{transform:rotate(360deg)}}';
+            document.head.appendChild(st);
+
+            document.addEventListener('DOMContentLoaded', function () {
+                if (!window.__AUTO_OPEN__) return;
+                if (document.getElementById('autoOpenSplash')) return;
+                var sp = document.createElement('div');
+                sp.id = 'autoOpenSplash';
+                sp.innerHTML = '<div class="ao-spin"></div><div>מתחבר לבקר…</div>';
+                document.body.appendChild(sp);
+            });
+        } catch (e) { /* בכל תקלה — פשוט לא מסתירים, הלוגין יוצג רגיל */ }
+    })();
+    </script>
+
+</head>
+<body>
+<div class="main-container">
+    <!-- Header -->
+<!-- Header -->
+    <div class="header">
+		<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            <img id="appLogo" src="heatmind_app_icon_512.png" alt="HeatMind Logo" class="header-logo">
+            <span id="appVersionLabel" style="font-size: 12px; color: #ffffff; opacity: 0.9; font-weight: 600;"></span>
+            <span id="versionUpdateHint" onclick="openUpdateFromNotice()" style="
+                display: none; font-size: 11px; color: #fff3cd; cursor: pointer;
+                background: rgba(255,193,7,0.25); padding: 2px 10px; border-radius: 10px;
+                -webkit-tap-highlight-color: transparent;"></span>
+        </div>
+        <style>
+            @keyframes versionBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+            #appVersionLabel.update-available {
+                animation: versionBlink 1s ease-in-out infinite;
+                color: #ffe082; text-decoration: underline; cursor: pointer;
+            }
+        </style>
+        <div class="header-text">
+            <h1 id="headerTitle">HeatMind</h1>
+            <p id="headerSubtitle">ניהול בקרי דוד חכם</p>
+        </div>
+        <div class="progress-bar" id="progressBar" style="width: 33%"></div>
+    </div>
+    <script>
+    // עדכון מיידי של ה-header מהקונפיגורציה (לפני שה-DOM נטען)
+    (function() {
+        // המתן עד שהקונפיג נטען
+        if (typeof APP_CONFIG !== 'undefined') {
+            const logo = document.getElementById('appLogo');
+            const title = document.getElementById('headerTitle');
+            const subtitle = document.getElementById('headerSubtitle');
+            
+            if (logo) {
+                logo.src = APP_CONFIG.assets.logo.src;
+                logo.alt = APP_CONFIG.assets.logo.alt;
+            }
+            if (title) title.textContent = APP_CONFIG.auth.login.title;
+            if (subtitle) subtitle.textContent = APP_CONFIG.auth.login.subtitle;
+        }
+    })();
+    </script>
+    <!-- User Bar (מוצג רק אחרי התחברות) -->
+    <div class="user-bar" id="userBar">
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">M</div>
+            <span id="currentUser">משתמש</span>
+        </div>
+        <button class="btn btn-secondary" onclick="logout()">יציאה</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Step 1: Login/Register -->
+        <div class="step active" id="stepLogin">
+            <form id="authForm">
+
+                <div class="form-group">
+                    <label for="userName">שם משתמש:</label>
+                    <input type="text" id="userName" name="userName" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">סיסמה:</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+
+                <!-- שדות רישום נוספים -->
+                <div id="registerFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="email">כתובת אימייל:</label>
+                        <input type="email" id="email" name="email" autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">אישור סיסמה:</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-full" id="authBtn"
+                        style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <span id="authBtnText">כניסה</span>
+                    <span id="savedCountBadge" style="
+                        background: rgba(255,255,255,0.28); color: #fff;
+                        padding: 3px 10px; border-radius: 12px;
+                        font-size: 12px; font-weight: normal;
+                        display: none;
+                    "></span>
+                    <div class="loading-spinner" id="authSpinner" style="display: none;"></div>
+                </button>
+            </form>
+
+            <!-- 🌐 חיבור מקומי לבקר — צמוד לכניסה לענן, כי שניהם דרכי כניסה למערכת -->
+            <button type="button"
+                    class="btn btn-secondary btn-full"
+                    onclick="openLocalConnectPicker()"
+                    style="margin-top: 10px;">
+                🌐 חיבור מקומי לבקר
+            </button>
+
+            <!-- ⚙️ ניהול בקרים — צפייה ומחיקה של בקרי הענן והחיבור המקומי -->
+            <button type="button"
+                    class="btn btn-full"
+                    onclick="showManageControllers()"
+                    style="margin-top: 10px; background:#eef2f7; color:#374151; border:1px solid #d0d7e2;">
+                ⚙️ ניהול בקרים
+            </button>
+
+            <!-- 📋 אינדיקטור (מוצג רק כאשר אין בקרים שמורים — להפניית המשתמש) -->
+            <div id="savedControllersHint" style="
+                margin-top: 12px; padding: 10px 14px; border-radius: 8px;
+                font-size: 13px; text-align: center; display: none;
+            "></div>
+
+            <div class="toggle-link">
+                <p id="toggleText">אין לך חשבון? <a onclick="toggleAuthMode()">הירשם כאן</a></p>
+            </div>
+
+            <!-- 🔧 עדכון הבקר — תהליך שונה לחלוטין (קונפיגורציה, לא כניסה למערכת).
+                 מופרד גרפית מעל ע"י קו ומרווח, ועם רקע אחר. -->
+            <div style="margin-top: 28px; padding-top: 20px; border-top: 2px dashed #d0d0d0;">
+                <div style="font-size: 11px; color: #888; text-align: center; margin-bottom: 10px;
+                            letter-spacing: 0.5px;">
+                    — הגדרות בקר —
+                </div>
+                <button type="button"
+                        class="btn btn-full"
+                        onclick="updateEspDevice()"
+                        style="background: #f0f0f0; color: #555; border: 1px solid #ccc;">
+                    🔧 עדכן בקר סמוך פיזית
+                </button>
+                <div style="font-size: 11px; color: #aaa; text-align: center; margin-top: 6px;">
+                    הגדרת WiFi וזיהוי בקר חדש (לא כניסה למערכת)
+                </div>
+            </div>
+
+        </div>
+
+
+
+
+
+
+
+
+		<div id="wifiStatusBtn" class="wifi-status-btn" onclick="showWifiStatus(event)" title="הצג מידע רשת">
+			<div class="wifi-icon" id="wifiIcon">📶</div>
+			<div class="wifi-tooltip" id="wifiTooltip">בודק רשת...</div>
+		</div>
+        <!-- Step 2: Loading Devices -->
+        <div class="step" id="stepLoading">
+            <div style="text-align: center; padding: 60px 20px;">
+                <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div>
+                <h3 style="margin-bottom: 12px; color: var(--text-primary);">טוען מכשירים...</h3>
+                <p style="color: var(--text-secondary);">אנא המתן בזמן שאנו מביאים את רשימת המכשירים שלך</p>
+            </div>
+        </div>
+
+        <!-- Step 3: Device Selection -->
+        <div class="step" id="stepDevices">
+            <div id="deviceContent">
+                <!-- יוצג כאן תוכן המכשירים -->
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" onclick="connectToDevice()" id="connectBtn" disabled>
+                    התחבר למכשיר
+                </button>
+                <button class="btn btn-secondary" onclick="refreshDevices()">
+                    רענן רשימה
+                </button>
+            </div>
+			
+			<div class="btn-group" style="margin-top: 12px;">
+<!--                  <button class="btn btn-esp-config btn-full" onclick="connectToESPConfig()">
+                     <i class="fas fa-wifi" style="margin-left: 8px;"></i>
+                     התחבר לבקר הסמוך ישירות
+                 </button>
+ -->				<button class="btn btn-secondary btn-full" onclick="updateEspDevice()">
+                    🔧 עדכן בקר סמוך פיזית
+                </button>
+            </div>
+
+ 			
+        </div>
+    </div>
+</div>
+
+
+   <script>
+// ============================================
+// 🎨 קונפיגורציה מרכזית - כל הטקסטים והגדרות UI
+// ============================================
+const APP_CONFIG = {
+  // מידע כללי על האפליקציה
+  app: {
+    name: 'HeatMind',
+    title: 'ניהול בקרי דוד חכם',
+    version: '1780608717031',
+    displayVersion: window.APP_VERSION   // נגזר מהשורה הראשונה בקובץ
+  },
+  
+  // לוגו ואייקונים
+  assets: {
+    logo: {
+      src: 'heatmind_app_icon_512.png',
+      alt: 'HeatMind Logo',
+      width: '70px',
+      height: '70px'
+    },
+    wifi: {
+      icon: '📶',
+      defaultTooltip: 'בודק רשת...',
+      connectedIcon: '✅',
+      disconnectedIcon: '❌'
+    }
+  },
+  
+  // טקסטים למסכי אימות (התחברות ורישום)
+  auth: {
+    login: {
+      title: 'HeatMind',
+      subtitle: 'ניהול בקרי דוד חכם',
+      buttonText: 'כניסה',
+      switchLink: 'אין לך חשבון? <a onclick="toggleAuthMode()">הירשם כאן</a>'
+    },
+    register: {
+      title: 'רישום למערכת',
+      subtitle: 'צור חשבון חדש לניהול בקרים',
+      buttonText: 'הירשם למערכת',
+      switchLink: 'כבר יש לך חשבון? <a onclick="toggleAuthMode()">היכנס כאן</a>'
+    }
+  },
+  
+  // טקסטים למסכי המערכת
+  screens: {
+    loading: {
+      title: 'טוען מכשירים...',
+      subtitle: 'אנא המתן בזמן שאנו מביאים את רשימת המכשירים שלך'
+    },
+    devices: {
+      title: 'המכשירים שלך',
+      noDevices: 'אין מכשירים רשומים',
+      noDevicesSubtitle: 'לא נמצאו בקרים במערכת שלך',
+      addFirstDevice: 'הוסף מכשיר ראשון',
+      connecting: 'מתחבר למכשיר',
+      deviceOffline: 'המכשיר לא מחובר',
+      deviceOfflineMessage: 'אנא ודא שהמכשיר מחובר לרשת ונסה שוב'
+    }
+  },
+  
+  // הודעות מערכת
+  messages: {
+    // הודעות הצלחה
+    loginSuccess: 'התחברת בהצלחה!',
+    registerSuccess: 'נרשמת בהצלחה! מעביר להתחברות...',
+    registerSuccessNext: 'כעת תוכל להתחבר עם המשתמש החדש',
+    deviceConnected: 'נכנס לניהול {deviceName}...',
+    wifiConnected: 'התחבר בהצלחה לרשת עם אינטרנט',
+    
+    // הודעות שגיאה
+    networkError: 'שגיאה בחיבור לשרת',
+    loginError: 'שגיאה בהתחברות',
+    registerError: 'שגיאה ברישום',
+    deviceLoadError: 'שגיאה בטעינת המכשירים',
+    deviceOfflineError: 'המכשיר לא מחובר כעת',
+    deviceDisconnected: 'המכשיר התנתק. מציג אפשרויות...',
+    deviceConnectionError: 'שגיאה בחיבור למכשיר',
+    noInternet: 'אין חיבור אינטרנט. מחפש רשת זמינה...',
+    noInternetFound: 'לא הצלחנו למצוא רשת עם אינטרנט. נא להתחבר ידנית.',
+    
+    // הודעות כלליות
+    systemError: 'שגיאת מערכת. אנא רענן את הדף.',
+    initError: 'שגיאת אתחול מערכת',
+    fillAllFields: 'נא למלא את כל השדות הנדרשים',
+    fillEmail: 'נא למלא כתובת אימייל',
+    passwordMismatch: 'הסיסמאות לא תואמות',
+    searchingNetwork: 'מחפש רשת זמינה עם אינטרנט...',
+    openingEspConfig: 'פותח דף עדכון ESP...',
+    openingDeviceUpdate: 'פותח דף עדכון מכשיר...',
+    connectingToDevice: 'מתחבר למכשיר {deviceName}...',
+    deviceSelected: 'נבחר מכשיר: {deviceName}'
+  },
+  
+  // טקסטים לכפתורים
+  buttons: {
+    login: 'כניסה',
+    register: 'הירשם למערכת',
+    logout: 'יציאה',
+    connect: 'התחבר למכשיר',
+    refresh: 'רענן רשימה',
+    addDevice: 'הוסף מכשיר ראשון',
+    addAnotherDevice: 'הוסף מכשיר נוסף',
+    tryAgain: 'נסה שוב',
+    connectToESP: 'התחבר לרשת הבקר',
+    updateDevice: 'עדכן מכשיר',
+    configWithoutLogin: 'התחבר לבקר הסמוך ישירות',
+    openSettings: 'פתח הגדרות',
+    cancel: 'ביטול'
+  },
+  
+  // צבעים (אם נרצה לנהל גם את זה מרכזית)
+  colors: {
+    primary: '#bbf7d0',
+    secondary: '#764ba2',
+    success: '#10b981',
+    error: '#ef4444',
+    warning: '#f59e0b'
+  }
+};
+
+// ============================================
+// 🔧 פונקציות עזר לשימוש בקונפיגורציה
+// ============================================
+
+// החלפת placeholder בטקסט (לדוגמה: {deviceName})
+function formatMessage(messageKey, params = {}) {
+  let message = APP_CONFIG.messages[messageKey] || messageKey;
+  Object.keys(params).forEach(key => {
+    message = message.replace(`{${key}}`, params[key]);
+  });
+  return message;
+}
+
+// קבלת טקסט לפי מצב אימות (login/register)
+function getAuthText(field, isRegisterMode = false) {
+  const mode = isRegisterMode ? 'register' : 'login';
+  return APP_CONFIG.auth[mode][field];
+}
+
+// ============================================
+// 🔄 ניקוי מטמון אוטומטי
+// ============================================
+// ניקוי מטמון אוטומטי
+(function() {
+    const currentVersion = APP_CONFIG.app.version; // שימוש במשתנה מהקונפיג
+    const savedVersion = localStorage.getItem('appVersion');
+    
+    if (savedVersion !== currentVersion) {
+        console.log('🔄 גרסה חדשה זוהתה, מנקה מטמון...');
+        
+        // נקה localStorage — אך שמור את הבקרים ואת נתוני החיבור המקומי
+        const keysToKeep = [
+            'authToken',
+            'currentUser',
+            'savedControllers',   // רשימת הבקרים (כניסה למערכת)
+            'savedApPasswords',   // רשימת החיבור המקומי {apSsid: password}
+            'lastLocalSsid'       // החיבור המקומי האחרון (לחיבור מהיר)
+        ];
+        const tempStorage = {};
+        keysToKeep.forEach(key => {
+            const value = localStorage.getItem(key);
+            if (value) tempStorage[key] = value;
+        });
+        
+        localStorage.clear();
+        
+        // החזר את הנתונים החשובים
+        Object.keys(tempStorage).forEach(key => {
+            localStorage.setItem(key, tempStorage[key]);
+        });
+        
+        // שמור גרסה חדשה
+        localStorage.setItem('appVersion', currentVersion);
+        
+        // נקה Service Workers אם יש
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(reg => reg.unregister());
+            });
+        }
+        
+        // נקה Cache API
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => caches.delete(name));
+            });
+        }
+        
+        console.log('✅ מטמון נוקה! רענן את הדף...');
+        
+        // רענן את הדף
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 500);
+    } else {
+        console.log('✅ גרסה נוכחית:', currentVersion);
+    }
+})();
+// הוסף את הקוד הזה לתחילת ה-script ב-login.html
+
+// דיבוג מוקדם
+console.log('=== ESP Connect Debug Info ===');
+console.log('Location:', window.location.href);
+console.log('User Agent:', navigator.userAgent);
+console.log('Android object:', typeof Android !== 'undefined');
+console.log('Platform:', navigator.platform);
+console.log('Connection type:', navigator.connection?.effectiveType || 'unknown');
+// הוסף קוד דיבוג לבדיקה
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - checking WiFi elements');
+    const wifiBtn = document.getElementById('wifiStatusBtn');
+    const tooltip = document.getElementById('wifiTooltip');
+    
+    console.log('WiFi button found:', !!wifiBtn);
+    console.log('Tooltip found:', !!tooltip);
+    
+    if (wifiBtn) {
+        console.log('WiFi button element:', wifiBtn);
+        // הוסף event listener נוסף לוודא שהכפתור עובד
+        wifiBtn.addEventListener('click', function(e) {
+            console.log('WiFi button clicked via event listener - DEBUG');
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    }
+});
+// משתני WiFi Status
+let currentNetworkInfo = null;
+let wifiUpdateInterval = null;
+
+function showWifiStatus(event) {
+    console.log('showWifiStatus clicked!');
+    
+    // עצור את ההתפשטות של האירוע
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    
+    const tooltip = document.getElementById('wifiTooltip');
+    
+    if (!tooltip) {
+        console.log('Tooltip element not found!');
+        return;
+    }
+    
+    // בדוק אם הטולטיפ פתוח או סגור
+    const isVisible = tooltip.classList.contains('show') || 
+                     tooltip.style.opacity === '1' || 
+                     tooltip.style.visibility === 'visible';
+    
+    console.log('Tooltip is visible:', isVisible);
+    
+    if (isVisible) {
+        console.log('Closing tooltip');
+        hideWifiTooltip();
+    } else {
+        console.log('Opening tooltip');
+        // פתח את הטולטיפ ועדכן מידע
+        tooltip.classList.add('show');
+        tooltip.style.opacity = '1';
+        tooltip.style.visibility = 'visible';
+        tooltip.style.pointerEvents = 'auto';
+        
+        // עדכן מידע WiFi
+        tooltip.innerHTML = 'טוען מידע רשת...';
+        updateWifiStatus();
+    }
+}
+
+
+function updateWifiTooltip(tooltipElement, networkInfo) {
+    if (!tooltipElement || !networkInfo) return;
+    
+    const { ssid, type, availableNetworks } = networkInfo;
+    const currentSsid = ssid; // הרשת הנוכחית
+    
+    let tooltipHTML = `
+        <div class="wifi-tooltip-header">
+            רשת נוכחית: ${currentSsid}
+            <div class="wifi-tooltip-subtitle">${type && type !== 'לא ידוע' ? type : 'WiFi'}</div>
+        </div>
+    `;
+    
+    if (availableNetworks && availableNetworks.length > 0) {
+        // סנן את הרשת הנוכחית מהרשימה
+        const otherNetworks = availableNetworks.filter(network => 
+            network.ssid !== currentSsid
+        );
+        
+        if (otherNetworks.length > 0) {
+            tooltipHTML += `
+                <div class="wifi-networks-list">
+                    רשתות אחרות זמינות - לחץ להתחברות:
+                </div>
+            `;
+            
+            const networksToShow = otherNetworks.slice(0, 15);
+            
+            networksToShow.forEach((network, index) => {
+                const signalBars = getSignalBars(network.level);
+                const lockIcon = network.isSecure ? '🔒' : '🔓';
+                const safeSsid = String(network.ssid || 'Unknown').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                
+                tooltipHTML += `
+                    <div class="wifi-network-item" 
+                         data-ssid="${safeSsid}" 
+                         data-secure="${network.isSecure}"
+                         data-index="${index}">
+                        <div class="wifi-network-name">
+                            <span class="wifi-lock-icon">${lockIcon}</span>
+                            ${network.ssid}
+                        </div>
+                        <div class="wifi-network-signal">
+                            ${signalBars} <span class="wifi-signal-strength">${network.signalStrength || 'N/A'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (otherNetworks.length > 15) {
+                tooltipHTML += `
+                    <div style="font-size: 10px; opacity: 0.6; text-align: center; margin-top: 4px;">
+                        ועוד ${otherNetworks.length - 15} רשתות אחרות...
+                    </div>
+                `;
+            }
+        } else {
+            tooltipHTML += `
+                <div class="no-networks">
+                    אין רשתות אחרות זמינות
+                </div>
+            `;
+        }
+    } else {
+        tooltipHTML += `
+            <div class="no-networks">
+                לא נמצאו רשתות זמינות
+            </div>
+        `;
+    }
+    
+    // זמן עדכון
+    const lastUpdate = new Date().toLocaleTimeString('he-IL', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    tooltipHTML += `
+        <div class="wifi-update-time">
+            עדכון: ${lastUpdate}
+        </div>
+    `;
+    
+    tooltipElement.innerHTML = tooltipHTML;
+    
+    // הוסף event listeners
+    setTimeout(() => {
+        const networkItems = tooltipElement.querySelectorAll('.wifi-network-item');
+        networkItems.forEach(item => {
+            item.addEventListener('click', handleNetworkClick);
+        });
+    }, 50);
+}// פונקציה נפרדת לטיפול בלחיצה על רשת
+function handleNetworkClick(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const item = event.currentTarget;
+    const ssid = item.getAttribute('data-ssid');
+    const isSecure = item.getAttribute('data-secure') === 'true';
+    
+    console.log('Network clicked:', ssid, 'Secure:', isSecure);
+    
+    // סגור את הטולטיפ מיד
+    hideWifiTooltip();
+    
+    // התחבר לרשת
+    connectToWifiNetwork(ssid, isSecure);
+}
+
+
+
+// תקן גם את tryConnectToNetwork לתמוך בשני ה-interfaces:
+function tryConnectToNetwork(ssid, password) {
+    console.log('=== tryConnectToNetwork נקרא ===');
+    console.log('SSID:', ssid);
+    console.log('Password length:', password.length);
+    
+    showMessage(`מנסה להתחבר לרשת ${ssid}...`, 'info');
+    
+    // נסה AndroidInterface ראשון (החדש יותר)
+    if (typeof AndroidInterface !== 'undefined' && typeof AndroidInterface.connectToWifi === 'function') {
+        console.log('משתמש ב-AndroidInterface.connectToWifi');
+        try {
+            AndroidInterface.connectToWifi(ssid, password);
+            showMessage(`שלח בקשת חיבור לרשת ${ssid}`, 'success');
+            return;
+        } catch (error) {
+            console.error('שגיאה ב-AndroidInterface.connectToWifi:', error);
+        }
+    }
+    
+    // נסה Android (fallback)
+    if (typeof Android !== 'undefined' && typeof Android.connectToWifi === 'function') {
+        console.log('Fallback - משתמש ב-Android.connectToWifi');
+        try {
+            Android.connectToWifi(ssid, password);
+            showMessage(`שלח בקשת חיבור לרשת ${ssid}`, 'success');
+            return;
+        } catch (error) {
+            console.error('שגיאה ב-Android.connectToWifi:', error);
+        }
+    }
+    
+    // אם שני ה-interfaces לא עבדו
+    console.log('שני ה-interfaces לא זמינים');
+    showMessage('שגיאה: לא ניתן להתחבר אוטומטי לרשת', 'error');
+    
+    // פתח הגדרות WiFi
+    if (typeof AndroidInterface !== 'undefined' && typeof AndroidInterface.openWifiSettings === 'function') {
+        AndroidInterface.openWifiSettings();
+    } else if (typeof Android !== 'undefined' && typeof Android.openWifiSettings === 'function') {
+        Android.openWifiSettings();
+    }
+}
+
+// תקן גם את connectToWifiNetwork:
+function connectToWifiNetwork(networkSsid, isSecure) {
+    console.log('מתחבר לרשת:', networkSsid, 'מאובטחת:', isSecure);
+    
+    hideWifiTooltip();
+    
+    // בדוק קודם אם הרשת שמורה (בשני ה-interfaces)
+    let reconnected = false;
+    
+    if (typeof AndroidInterface !== 'undefined' && typeof AndroidInterface.reconnectToKnownNetwork === 'function') {
+        console.log('בודק רשת שמורה - AndroidInterface');
+        const isKnown = AndroidInterface.reconnectToKnownNetwork(networkSsid);
+        if (isKnown) {
+            showMessage(`מתחבר לרשת שמורה: ${networkSsid}`, 'success');
+            return;
+        }
+    } else if (typeof Android !== 'undefined' && typeof Android.reconnectToKnownNetwork === 'function') {
+        console.log('בודק רשת שמורה - Android fallback');
+        const isKnown = Android.reconnectToKnownNetwork(networkSsid);
+        if (isKnown) {
+            showMessage(`מתחבר לרשת שמורה: ${networkSsid}`, 'success');
+            return;
+        }
+    }
+    
+    // אם לא שמורה, נסה עם סיסמה
+    if (isSecure) {
+        if (networkSsid === 'espConfig') {
+            console.log('זוהתה רשת espConfig - משתמש בסיסמה ידועה');
+            tryConnectToNetwork(networkSsid, 'brand2016');
+        } else {
+            const password = prompt(`הכנס סיסמה עבור רשת: ${networkSsid}`);
+            if (password) {
+                tryConnectToNetwork(networkSsid, password);
+            }
+        }
+    } else {
+        console.log('רשת פתוחה');
+        if (confirm(`האם להתחבר לרשת הפתוחה "${networkSsid}"?`)) {
+            tryConnectToNetwork(networkSsid, '');
+        }
+    }
+}
+
+// פונקציה לסגירת טולטיפ
+function hideWifiTooltip() {
+    console.log('hideWifiTooltip called');
+    const tooltip = document.getElementById('wifiTooltip');
+    if (tooltip) {
+        tooltip.classList.remove('show');
+        tooltip.style.opacity = '0';
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.pointerEvents = 'none';
+        console.log('Tooltip hidden');
+    } else {
+        console.log('Tooltip element not found in hideWifiTooltip');
+    }
+}
+
+// הוסף event listener לסגירת tooltip בלחיצה מחוץ לאזור
+document.addEventListener('click', (e) => {
+    const wifiBtn = document.getElementById('wifiStatusBtn');
+    const tooltip = document.getElementById('wifiTooltip');
+    
+    // המתן קצת כדי לוודא שהלחיצה על הכפתור התרחשה
+    setTimeout(() => {
+        if (wifiBtn && tooltip && 
+            !wifiBtn.contains(e.target) && 
+            !tooltip.contains(e.target)) {
+            console.log('Closing tooltip from outside click');
+            hideWifiTooltip();
+        }
+    }, 10);
+});
+/**
+ * עדכון סטטוס WiFi
+ */
+// הוסף לחלק של עדכון WiFi:
+async function updateWifiStatus() {
+    try {
+        const statusBtn = document.getElementById('wifiStatusBtn');
+        const icon = document.getElementById('wifiIcon');
+        const tooltip = document.getElementById('wifiTooltip');
+        
+        if (!statusBtn || !icon || !tooltip) return;
+        
+        statusBtn.classList.add('wifi-updating');
+        
+        // קבל מידע רשת נוכחי + רשימת רשתות זמינות
+        let networkJson;
+        let availableNetworksJson = '[]';
+        
+        if (window.AndroidInterface) {
+            networkJson = window.AndroidInterface.getCurrentNetworkInfo();
+            // הוסף קריאה לרשימת רשתות זמינות (צריך להוסיף באנדרואיד)
+            if (typeof window.AndroidInterface.getAvailableNetworks === 'function') {
+                availableNetworksJson = window.AndroidInterface.getAvailableNetworks();
+            }
+        } else {
+            networkJson = '{"ssid":"לא זמין","type":"אין חיבור","signal":"0"}';
+        }
+        
+        currentNetworkInfo = JSON.parse(networkJson);
+        
+        // הוסף רשימת רשתות זמינות למידע
+        try {
+            currentNetworkInfo.availableNetworks = JSON.parse(availableNetworksJson);
+        } catch (e) {
+            currentNetworkInfo.availableNetworks = [];
+        }
+        
+        updateWifiIcon(icon, currentNetworkInfo);
+        updateWifiTooltip(tooltip, currentNetworkInfo);
+        
+        setTimeout(() => statusBtn.classList.remove('wifi-updating'), 500);
+        
+    } catch (error) {
+        console.error('שגיאה בעדכון סטטוס WiFi:', error);
+        
+        // הצג שגיאה
+        const icon = document.getElementById('wifiIcon');
+        const tooltip = document.getElementById('wifiTooltip');
+        
+        if (icon) icon.textContent = '❌';
+        if (tooltip) tooltip.textContent = 'שגיאה בקריאה';
+    }
+} 
+
+/**
+ * עדכון אייקון WiFi
+ */
+function updateWifiIcon(iconElement, networkInfo) {
+    if (!iconElement || !networkInfo) return;
+    
+    const { ssid, type, signal } = networkInfo;
+    let icon = '📶';
+    let className = 'wifi-medium';
+    
+    // בחירת אייקון לפי סוג רשת
+    if (ssid === 'לא מחובר' || ssid === 'אין חיבור') {
+        icon = '📵';
+        className = 'wifi-disconnected';
+    } else if (type.includes('WiFi')) {
+        const signalNum = parseInt(signal);
+        if (signalNum > -50) {
+            icon = '📶';
+            className = 'wifi-strong';
+        } else if (signalNum > -70) {
+            icon = '📶';
+            className = 'wifi-medium';
+        } else if (signalNum < -70 && signalNum !== 0) {
+            icon = '📶';
+            className = 'wifi-weak';
+        } else {
+            icon = '📶';
+            className = 'wifi-medium';
+        }
+    } else if (type.includes('סלולרית') || type.includes('מובייל')) {
+        icon = '📱';
+        className = 'wifi-medium';
+    } else if (ssid.includes('espConfig') || ssid.includes('ESP')) {
+        icon = '🔧';
+        className = 'wifi-strong';
+    }
+    
+    iconElement.textContent = icon;
+    iconElement.className = `wifi-icon ${className}`;
+}
+
+
+function getSignalBars(level) {
+    if (level > -50) return "████"; // מעולה
+    if (level > -60) return "███▁"; // טוב
+    if (level > -70) return "██▁▁"; // בינוני
+    if (level > -80) return "█▁▁▁"; // חלש
+    return "▁▁▁▁"; // חלש מאוד
+} 
+
+function getSignalIcon(level) {
+    if (level > -50) return "📶"; // מעולה
+    if (level > -60) return "📶"; // טוב  
+    if (level > -70) return "📊"; // בינוני
+    if (level > -80) return "📈"; // חלש
+    return "📉"; // חלש מאוד
+}
+
+/**
+ * הצגת מידע WiFi מפורט
+ */
+
+/**
+ * התחלת עדכון אוטומטי של סטטוס WiFi
+ */
+function startWifiStatusUpdates() {
+    // עדכן מיד
+    updateWifiStatus();
+    
+    // עדכן כל 15 שניות
+    if (wifiUpdateInterval) {
+        clearInterval(wifiUpdateInterval);
+    }
+    
+    wifiUpdateInterval = setInterval(updateWifiStatus, 15000);
+}
+
+/**
+ * עצירת עדכונים אוטומטיים
+ */
+function stopWifiStatusUpdates() {
+    if (wifiUpdateInterval) {
+        clearInterval(wifiUpdateInterval);
+        wifiUpdateInterval = null;
+    }
+}
+
+// התחל עדכונים כשהדף נטען
+document.addEventListener('DOMContentLoaded', startWifiStatusUpdates);
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('=== Interface Debug ===');
+    console.log('Android:', typeof Android !== 'undefined');
+    if (typeof Android !== 'undefined') {
+        console.log('Android.connectToWifi:', typeof Android.connectToWifi);
+    }
+    console.log('AndroidInterface:', typeof AndroidInterface !== 'undefined');
+    if (typeof AndroidInterface !== 'undefined') {
+        console.log('AndroidInterface.connectToWifi:', typeof AndroidInterface.connectToWifi);
+    }
+});
+// עצור עדכונים כשהדף נסגר
+window.addEventListener('beforeunload', stopWifiStatusUpdates);
+
+// עדכן גם כשהדף חוזר לפוקוס (למקרה של החלפת רשתות)
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        setTimeout(updateWifiStatus, 1000);
+    }
+});
+
+// פונקציה לבדיקת חיבור רשת
+async function debugNetworkConnection() {
+	const testUrls = [
+	SERVER_BASE,
+	'https://google.com',
+	'http://httpbin.org/ip'
+	];
+
+	for (const url of testUrls) {
+		try {
+		const start = Date.now();
+		const response = await fetch(url, {
+		method: 'HEAD',
+		mode: 'no-cors',
+		timeout: 3000
+		});
+		const time = Date.now() - start;
+		console.log(`✅ ${url} - ${time}ms`);
+
+		// אם זה השרת שלנו, נסה גם GET
+		if (url === SERVER_BASE) {
+			try {
+			  const getResp = await fetch(`${url}/api/auth/health`, { timeout: 5000 });
+			  console.log(`✅ Server health check: ${getResp.status}`);
+				} catch (e) {
+				  console.log(`❌ Server health check failed:`, e.message);
+				}
+			}
+		}
+		catch (error) {
+		 console.log(`❌ ${url} - ${error.message}`);
+		}
+	}
+}
+
+// הרץ בדיקת רשת כשהדף נטען
+window.addEventListener('load', () => {
+	console.log('Page loaded, running network debug...');
+	debugNetworkConnection();
+});
+
+// בדיקה אם יש JavaScript Bridge
+if (typeof Android !== 'undefined') {
+	console.log('✅ Android JavaScript Bridge is available');
+	try {
+		Android.log('JavaScript Bridge test from WebView');
+	} catch (e) {
+		console.log('❌ Android Bridge error:', e);
+	}
+} else {
+	console.log('❌ Android JavaScript Bridge not found - running in browser?');
+}
+// Service Worker Registration
+// אם תרצה להפעיל SW בעתיד, הסר את הסלאשים בשורות למטה:
+/*
+if ('serviceWorker' in navigator) {
+window.addEventListener('load', async () => {
+try {
+const registration = await navigator.serviceWorker.register('/sw.js');
+console.log('✅ ESP SW registered:', registration);
+} catch (error) {
+console.error('❌ ESP SW registration failed:', error);
+}
+});
+}
+*/
+
+// PWA Installation
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  console.log('📱 ESP Install prompt triggered');
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstallButton();
+});
+
+function showInstallButton() {
+  const installBtn = document.createElement('button');
+  installBtn.innerHTML = '📱 התקן אפליקציה';
+  installBtn.style.cssText = `
+	position: fixed;
+	bottom: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	border: none;
+	padding: 12px 24px;
+	border-radius: 25px;
+	font-size: 14px;
+	font-weight: 600;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+	z-index: 1000;
+	cursor: pointer;
+  `;
+
+  installBtn.addEventListener('click', async () => {
+	if (deferredPrompt) {
+	  deferredPrompt.prompt();
+	  const { outcome } = await deferredPrompt.userChoice;
+	  console.log('📱 Install outcome:', outcome);
+	  deferredPrompt = null;
+	  installBtn.remove();
+	}
+  });
+
+  document.body.appendChild(installBtn);
+
+  setTimeout(() => {
+	if (installBtn.parentNode) {
+	  installBtn.remove();
+	}
+  }, 10000);
+}
+
+window.addEventListener('appinstalled', () => {
+  console.log('✅ ESP PWA installed successfully');
+});
+
+function saveCurrentWifi() {
+  console.log('=== DEBUG: saveCurrentWifi נקרא ===');
+  
+  if (typeof Android !== 'undefined' && typeof Android.getCurrentWifi === 'function') {
+    try {
+      const currentWifiString = Android.getCurrentWifi();
+      console.log('רשת נוכחית (string):', currentWifiString);
+      
+      if (currentWifiString) {
+        // פענח את ה-JSON string
+        const currentWifi = JSON.parse(currentWifiString);
+        console.log('רשת נוכחית (parsed):', currentWifi);
+        
+        if (currentWifi && currentWifi.ssid && currentWifi.ssid !== 'espConfig') {
+          const wifiData = {
+            ssid: currentWifi.ssid,
+            password: currentWifi.password || '',
+            timestamp: Date.now()
+          };
+          
+          try {
+            localStorage.setItem('previousWifi', JSON.stringify(wifiData));
+            console.log('נשמר ב-localStorage:', wifiData);
+            
+            // בדיקה מיידית שהשמירה הצליחה
+            const verification = localStorage.getItem('previousWifi');
+            console.log('אימות שמירה:', verification);
+            
+            return true;
+          } catch (saveError) {
+            console.error('שגיאה בשמירה ל-localStorage:', saveError);
+            return false;
+          }
+        } else {
+          console.log('לא שומר רשת espConfig או רשת לא חוקית. רשת נוכחית:', currentWifi);
+          return false;
+        }
+      } else {
+        console.log('לא התקבלה רשת מ-Android');
+        return false;
+      }
+    } catch (error) {
+      console.error('שגיאה בעיבוד רשת נוכחית:', error);
+      return false;
+    }
+  } else {
+    console.log('Android.getCurrentWifi לא זמין');
+    return false;
+  }
+}
+
+
+// 🌐 משתנים גלובליים
+// const API_BASE = window.location.origin;
+// בקטע החדש הזה:
+
+// ============================================
+// 🌐 כתובת השרת — מקור אמת יחיד
+// שנה כאן בלבד — זה מעדכן את כל האפליקציה.
+// כתובת דומיין (לא IP) — אם ישתנה ה-IP בשרת, ה-DNS מטפל בזה.
+// ============================================
+const SERVER_BASE = 'https://espserver.smartdevice.cloud';
+
+function getApiBaseUrl() {
+  console.log('=== DEBUG: getApiBaseUrl called ===');
+  console.log('typeof Android:', typeof Android);
+  console.log('window.location.protocol:', window.location.protocol);
+  console.log('window.location.hostname:', window.location.hostname);
+  console.log('navigator.userAgent:', navigator.userAgent);
+
+  const isAndroidWebView = (
+    typeof Android !== 'undefined' ||
+    window.location.protocol === 'file:' ||
+    navigator.userAgent.includes('wv')
+  );
+
+  console.log('isAndroidWebView:', isAndroidWebView);
+
+  if (isAndroidWebView) {
+    const serverUrl = SERVER_BASE;
+    console.log('=== ANDROID DETECTED - RETURNING:', serverUrl, '===');
+    return serverUrl;
+  }
+
+  console.log('=== NOT ANDROID - USING BROWSER LOGIC ===');
+  const origin = window.location.origin || '';
+  if (origin && origin !== 'null') {
+    console.log('Browser origin:', origin);
+    return origin.replace(/\/+$/, '');
+  }
+
+  const fallback = SERVER_BASE;
+  console.log('Using fallback:', fallback);
+  return fallback;
+}
+
+const API_BASE = getApiBaseUrl();
+console.log('🔗 API Base URL determined:', API_BASE);
+
+let authToken = null;
+try {
+authToken = localStorage?.getItem('authToken') || null;
+} catch (e) {
+console.log('localStorage not available in this environment');
+authToken = null;
+}
+
+    let currentUser = null;
+    let devices = [];
+    let selectedDevice = null;
+    let isRegisterMode = false;
+    let currentStep = 1;
+
+    // 🎯 State Management
+    const AppState = {
+        step: 1,
+        user: null,
+        devices: [],
+        selectedDevice: null,
+        isLoading: false
+    };
+
+    // 🚀 אתחול האפליקציה
+async function initApp() {
+  console.log('Initializing ESP Dashboard...');
+  
+  // בדיקה ראשונה: האם יש אינטרנט?
+  const hasInternet = await checkInternetConnectivity();
+  
+  if (!hasInternet) {
+    console.log('אין אינטרנט - מחפש רשת זמינה');
+    showMessage('אין חיבור אינטרנט. מחפש רשת זמינה...', 'warning');
+    
+    const connected = await connectToNetworkWithInternet();
+    
+    if (!connected) {
+      showMessage('לא הצלחנו למצוא רשת עם אינטרנט. נא להתחבר ידנית.', 'error');
+      
+      // פתח הגדרות WiFi
+      if (typeof AndroidInterface !== 'undefined' && typeof AndroidInterface.openWifiSettings === 'function') {
+        AndroidInterface.openWifiSettings();
+      } else if (typeof Android !== 'undefined' && typeof Android.openWifiSettings === 'function') {
+        Android.openWifiSettings();
+      }
+      
+      await goToStep(1);
+      return;
+    }
+    
+    showMessage('התחבר בהצלחה לרשת עם אינטרנט', 'success');
+  }
+  
+  // יש אינטרנט - ממשיך בתהליך הרגיל
+  try {
+    const isAuthed = await checkExistingAuth();
+    if (isAuthed) {
+      await goToStep(2); // מסך טעינה
+      try {
+        await loadDevices();   // טען מכשירים + עדכן סטטוס + רנדר
+        await goToStep(3);     // מסך בחירת מכשיר / חיבור אוטומטי
+      } catch (e) {
+        console.error('Error loading devices during init:', e);
+        showMessage('שגיאה בטעינת המכשירים', 'error');
+        await goToStep(1);
+      }
+    } else {
+      await goToStep(1); // מסך התחברות/רישום
+    }
+  } catch (err) {
+    console.error('initApp fatal error:', err);
+    showMessage('שגיאת אתחול מערכת', 'error');
+    await goToStep(1);
+  }
+}	
+	
+	
+async function OLDinitApp() {
+  console.log('Initializing ESP Dashboard...');
+
+  try {
+    const isAuthed = await checkExistingAuth();
+
+    if (isAuthed) {
+      await goToStep(2); // מסך טעינה
+      try {
+        await loadDevices();   // טען מכשירים + עדכן סטטוס + רנדר
+        await goToStep(3);     // מסך בחירת מכשיר / חיבור אוטומטי
+      } catch (e) {
+        console.error('Error loading devices during init:', e);
+        showMessage('שגיאה בטעינת המכשירים', 'error');
+        await goToStep(1);
+      }
+    } else {
+      await goToStep(1); // מסך התחברות/רישום
+    }
+  } catch (err) {
+    console.error('initApp fatal error:', err);
+    showMessage('שגיאת אתחול מערכת', 'error');
+    await goToStep(1);
+  }
+}
+
+    // 🔐 בדיקת אימות קיים
+async function checkExistingAuth() {
+  let token = null;
+  let userDataRaw = null;
+
+  try {
+    token = localStorage?.getItem('authToken') || null;
+    userDataRaw = localStorage?.getItem('currentUser') || null;
+  } catch (e) {
+    console.log('localStorage not available');
+    return false;
+  }
+
+  if (!token || !userDataRaw) {
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(userDataRaw);
+    if (!parsed || typeof parsed.userName !== 'string' || !parsed.userName.trim()) {
+      throw new Error('Invalid user object');
+    }
+
+    authToken = token;
+    currentUser = {
+      id: parsed.id ?? parsed.userId ?? null,
+      userName: parsed.userName,
+      email: parsed.email || ''
+    };
+
+    return true;
+  } catch (err) {
+    console.error('Error parsing user data:', err);
+    try {
+      localStorage?.removeItem('currentUser');
+      localStorage?.removeItem('authToken');
+    } catch (e) {
+      console.log('Cannot clear invalid localStorage');
+    }
+    return false;
+  }
+}
+
+    // 📋 טיפול בטופס אימות
+    document.getElementById('authForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // (גיבוי — בדרך כלל זה ייתפס כבר ב-click handler על הכפתור למטה)
+        const savedControllers = getSavedControllers();
+        if (savedControllers.length === 1 && savedControllers[0] && savedControllers[0].clientId) {
+            openController(savedControllers[0].clientId);
+            return;
+        }
+        if (savedControllers.length >= 2) {
+            showSavedControllersPicker(savedControllers);
+            return;
+        }
+
+        const userName = document.getElementById('userName').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!userName || !password) {
+            showMessage('נא למלא את כל השדות הנדרשים, או להתחבר תחילה לבקר פיזית כדי לשמור אותו ברשימה', 'error');
+            return;
+        }
+
+        if (isRegisterMode) {
+            const email = document.getElementById('email').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!email) {
+                showMessage('נא למלא כתובת אימייל', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage('הסיסמאות לא תואמות', 'error');
+                return;
+            }
+
+            // בדיקת אינטרנט לפני רישום
+            const hasNet = await checkInternetConnectivity();
+            if (!hasNet) {
+                // אין אינטרנט — שחרר binding ל-ESP (אם יש) והצע הגדרות WiFi
+                ensureInternetAndNavigate(window.location.href);
+                return;
+            }
+            await handleRegister(userName, password, email);
+        } else {
+            // בדיקת אינטרנט לפני login
+            const hasNet = await checkInternetConnectivity();
+            if (!hasNet) {
+                ensureInternetAndNavigate(window.location.href);
+                return;
+            }
+            await handleLogin(userName, password);
+        }
+    });
+
+    // 🆕 תופס את ה-click *לפני* ולידציית ה-HTML5 (required fields):
+    //    בקר אחד → כניסה ישירה; שניים או יותר → רשימה לבחירה; אין → login רגיל.
+    document.getElementById('authBtn').addEventListener('click', function(e) {
+        const savedControllers = getSavedControllers();
+        if (savedControllers.length === 1 && savedControllers[0] && savedControllers[0].clientId) {
+            e.preventDefault();
+            e.stopPropagation();
+            openController(savedControllers[0].clientId);     // בקר יחיד — ישר פנימה
+        } else if (savedControllers.length >= 2) {
+            e.preventDefault();
+            e.stopPropagation();
+            showSavedControllersPicker(savedControllers);     // 2+ — רשימה לבחירה
+        }
+        // אם אין בקרים שמורים — לא עושים כלום, הטופס יוולד וייכנס לזרימת login רגילה
+    });
+
+// ============================================
+// 💾 רשימת בקרים שמורים מקומית (זמני - עד פיתוח חשבונות)
+// ============================================
+const SAVED_CONTROLLERS_KEY = 'savedControllers';
+const CONTROLLER_BASE_URL   = SERVER_BASE;
+const CONTROLLER_PATH       = '/blrBoiler';   // ← שנה אם תרצה כתובת שונה
+
+function getSavedControllers() {
+    try {
+        const raw = localStorage.getItem(SAVED_CONTROLLERS_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        console.warn('שגיאה בקריאת רשימת בקרים:', e);
+        return [];
+    }
+}
+
+function buildControllerUrl(clientId) {
+    return `${CONTROLLER_BASE_URL}${CONTROLLER_PATH}/${encodeURIComponent(clientId)}`;
+}
+
+function openController(clientId) {
+    const url = buildControllerUrl(clientId);
+    console.log('🔗 פותח בקר:', clientId, '→', url);
+    closeSavedControllersPicker();
+    // לפני ניווט — בדיקה שיש אינטרנט (השרת הענן נגיש)
+    ensureInternetAndNavigate(url);
+}
+
+// בודק אם השרת הענן נגיש; אם לא — פותח picker של WiFi למשתמש
+// פותח URL בחלון/Activity חדש - לא דורס את הדף הנוכחי.
+// באנדרואיד: פותח Activity חדש (back button חוזר). בדפדפן: window.location רגיל.
+function openInNewWindow(url) {
+    if (typeof AndroidInterface !== 'undefined' &&
+        typeof AndroidInterface.openNewWindow === 'function') {
+        AndroidInterface.openNewWindow(url);
+    } else {
+        // בדפדפן: ניווט רגיל. (back של הדפדפן מטפל בחזרה)
+        window.location.href = url;
+    }
+}
+
+async function ensureInternetAndNavigate(targetUrl) {
+    showCheckingInternetOverlay();
+    updateCheckingInternetMsg('בודק חיבור אינטרנט...');
+
+    // 1. אם כבר יש אינטרנט (המצב הרגיל בפתיחת האפליקציה) — לא עושים כלום, פשוט מנווטים.
+    let ok = await checkInternetConnectivity();
+
+    // 2. רק אם אין אינטרנט — משחררים את ה-binding ל-AP של ה-ESP ומנסים שוב.
+    let releasedBinding = false;
+    if (!ok &&
+        typeof AndroidInterface !== 'undefined' &&
+        typeof AndroidInterface.releaseEspBinding === 'function') {
+        AndroidInterface.releaseEspBinding();
+        releasedBinding = true;
+        updateCheckingInternetMsg('מתחבר לאינטרנט...');
+        // נותנים לאנדרואיד 2 שניות לבצע את ה-switch
+        await new Promise(r => setTimeout(r, 2000));
+        ok = await checkInternetConnectivity();
+    }
+
+    hideCheckingInternetOverlay();
+
+    if (ok) {
+        openInNewWindow(targetUrl);   // ⭐ במקום window.location.href = url
+    } else {
+        // עדיין אין אינטרנט - הצע פתיחת הגדרות WiFi
+        showNoInternetDialog(targetUrl, releasedBinding);
+    }
+}
+
+// (משתמשים בפונקציה הקיימת checkInternetConnectivity שמוגדרת בהמשך הקובץ)
+
+// overlay קטן בזמן הבדיקה
+function showCheckingInternetOverlay() {
+    if (document.getElementById('checkingInternetOverlay')) return;
+    const el = document.createElement('div');
+    el.id = 'checkingInternetOverlay';
+    el.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999;
+    `;
+    el.innerHTML = `
+        <div style="background: white; padding: 24px 36px; border-radius: 12px;
+                    text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+                    min-width: 240px;">
+            <div style="font-size: 28px; animation: spin 1.5s linear infinite;">⏳</div>
+            <div id="checkingInternetMsg" style="margin-top: 12px; color: #333;">
+                בודק חיבור אינטרנט...
+            </div>
+        </div>
+    `;
+    if (!document.getElementById('spinKeyframes')) {
+        const s = document.createElement('style');
+        s.id = 'spinKeyframes';
+        s.textContent = '@keyframes spin { 100% { transform: rotate(360deg); } }';
+        document.head.appendChild(s);
+    }
+    document.body.appendChild(el);
+}
+
+function updateCheckingInternetMsg(text) {
+    const m = document.getElementById('checkingInternetMsg');
+    if (m) m.textContent = text;
+}
+
+function hideCheckingInternetOverlay() {
+    const el = document.getElementById('checkingInternetOverlay');
+    if (el) el.remove();
+}
+
+// דיאלוג פשוט כשגם אחרי השחרור אין אינטרנט - הצעה למשתמש לטפל ידנית
+function showNoInternetDialog(targetUrl, alreadyReleased) {
+    const existing = document.getElementById('noInternetDialog');
+    if (existing) existing.remove();
+
+    const el = document.createElement('div');
+    el.id = 'noInternetDialog';
+    el.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10000; padding: 20px;
+    `;
+    el.innerHTML = `
+        <div style="background: white; border-radius: 14px; padding: 24px;
+                    max-width: 380px; width: 100%; text-align: center;
+                    box-shadow: 0 12px 40px rgba(0,0,0,0.3);">
+            <div style="font-size: 42px; margin-bottom: 8px;">📡</div>
+            <h3 style="margin: 0 0 8px; color: #c0392b;">אין חיבור אינטרנט</h3>
+            <p style="color: #555; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
+                ${alreadyReleased
+                    ? 'הטלפון לא חוזר אוטומטית לרשת ביתית. פתח את הגדרות ה-WiFi של אנדרואיד והתחבר לרשת עם אינטרנט.'
+                    : 'נא להתחבר לרשת WiFi עם אינטרנט או להפעיל את חבילת הגלישה הסלולרית.'}
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button onclick="openAndroidWifiSettings()"
+                        style="background: #4a9d4a; color: white; border: none;
+                               padding: 12px; border-radius: 8px; font-size: 15px;
+                               cursor: pointer; font-weight: bold;">
+                    📶 פתח הגדרות WiFi
+                </button>
+                <button onclick="retryInternetCheck('${targetUrl.replace(/'/g, "\\'")}')"
+                        style="background: #6c8eb7; color: white; border: none;
+                               padding: 10px; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                    🔄 נסה שוב
+                </button>
+                <button onclick="closeNoInternetDialog()"
+                        style="background: #aaa; color: white; border: none;
+                               padding: 8px; border-radius: 8px; font-size: 13px; cursor: pointer;">
+                    ביטול
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(el);
+}
+
+function closeNoInternetDialog() {
+    const el = document.getElementById('noInternetDialog');
+    if (el) el.remove();
+}
+
+function openAndroidWifiSettings() {
+    if (typeof AndroidInterface !== 'undefined' &&
+        typeof AndroidInterface.openWifiSettings === 'function') {
+        AndroidInterface.openWifiSettings();
+    } else if (typeof Android !== 'undefined' &&
+               typeof Android.openWifiSettings === 'function') {
+        Android.openWifiSettings();
+    }
+}
+
+function retryInternetCheck(targetUrl) {
+    closeNoInternetDialog();
+    ensureInternetAndNavigate(targetUrl);
+}
+
+// דיאלוג אישור מותאם — עובד גם ב-WebView של אנדרואיד (שם confirm() חסום)
+function uiConfirm(message, okText) {
+    return new Promise((resolve) => {
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);' +
+            'display:flex;align-items:center;justify-content:center;z-index:11000;padding:20px;';
+        ov.innerHTML =
+            '<div style="background:#fff;border-radius:14px;padding:22px;max-width:340px;' +
+            'width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.3);">' +
+                '<div style="font-size:15px;color:#333;line-height:1.5;margin-bottom:20px;">' + message + '</div>' +
+                '<div style="display:flex;gap:10px;">' +
+                    '<button type="button" id="uiConfirmNo" style="flex:1;background:#e5e7eb;color:#333;' +
+                    'border:none;padding:11px;border-radius:8px;font-size:14px;cursor:pointer;">ביטול</button>' +
+                    '<button type="button" id="uiConfirmYes" style="flex:1;background:#c0392b;color:#fff;' +
+                    'border:none;padding:11px;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">' +
+                    (okText || 'מחק') + '</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(ov);
+        const done = (val) => { ov.remove(); resolve(val); };
+        ov.querySelector('#uiConfirmYes').onclick = () => done(true);
+        ov.querySelector('#uiConfirmNo').onclick  = () => done(false);
+        ov.addEventListener('click', (e) => { if (e.target === ov) done(false); });
+    });
+}
+
+async function deleteController(clientId) {
+    const ok = await uiConfirm(`למחוק את בקר ${clientId} מהרשימה?`);
+    if (!ok) return;
+    const list = getSavedControllers().filter(c => String(c.clientId) !== String(clientId));
+    try {
+        localStorage.setItem(SAVED_CONTROLLERS_KEY, JSON.stringify(list));
+    } catch (e) {
+        console.error('מחיקה ל-localStorage נכשלה:', e);
+    }
+    // רענון התצוגה
+    closeSavedControllersPicker();
+    if (list.length > 0) {
+        showSavedControllersPicker(list);
+    }
+}
+
+function formatDate(iso) {
+    if (!iso) return '';
+    try {
+        const d = new Date(iso);
+        return d.toLocaleDateString('he-IL') + ' ' + d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+    } catch { return ''; }
+}
+
+function showSavedControllersPicker(list) {
+    // הסר אם כבר קיים
+    closeSavedControllersPicker();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'savedControllersOverlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10000; padding: 20px;
+    `;
+
+    // מיון: הנראה לאחרונה למעלה
+    const sorted = [...list].sort((a, b) =>
+        new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+
+    const itemsHtml = sorted.map(c => `
+        <div class="saved-ctrl-item" style="
+            background: white; border: 1px solid #e0e0e0; border-radius: 10px;
+            padding: 14px 16px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 12px;
+            transition: all 0.15s; cursor: pointer;
+            -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none;
+        "
+        onmouseover="this.style.borderColor='#4a9d4a'; this.style.background='#f7fbf7';"
+        onmouseout="this.style.borderColor='#e0e0e0'; this.style.background='white';"
+        onclick="openController('${String(c.clientId).replace(/'/g, "\\'")}')">
+			<div style="flex: 1; min-width: 0;">
+                <div style="font-weight: bold; font-size: 18px; color: #2d3748;">
+                    🏠 ${c.espName ? c.espName : 'בקר ' + c.clientId}
+                </div>
+                <div style="font-size: 12px; color: #888; margin-top: 2px; font-family: monospace;">מזהה: ${c.clientId}</div>
+                ${c.wifiSsid ? `<div style="font-size: 12px; color: #888; margin-top: 2px;">📶 ${c.wifiSsid}${c.lastSeenIp ? ' • ' + c.lastSeenIp : ''}</div>` : ''}
+                <div style="font-size: 11px; color: #aaa; margin-top: 4px;">
+                    נשמר לאחרונה: ${formatDate(c.savedAt)}
+                </div>
+            </div>            <button type="button" onclick="event.stopPropagation(); deleteController('${String(c.clientId).replace(/'/g, "\\'")}')"
+                    title="מחק בקר מהרשימה"
+                    style="background: none; border: none; color: #c0392b;
+                           font-size: 18px; cursor: pointer; padding: 4px 8px;
+                           -webkit-tap-highlight-color: transparent;">
+                🗑
+            </button>
+        </div>
+    `).join('');
+
+    overlay.innerHTML = `
+        <div style="
+            background: #f5f5f5; border-radius: 16px; max-width: 480px; width: 100%;
+            max-height: 85vh; display: flex; flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
+        ">
+            <div style="background: #4a9d4a; color: white; padding: 16px 20px;
+                        display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 18px;">בחר בקר להתחברות</h2>
+                <button onclick="closeSavedControllersPicker()"
+                        style="background: none; border: none; color: white;
+                               font-size: 24px; cursor: pointer; padding: 0 4px;">×</button>
+            </div>
+            <div style="padding: 16px; overflow-y: auto; flex: 1;">
+                ${itemsHtml}
+            </div>
+            <div style="padding: 12px 16px; background: white; border-top: 1px solid #e0e0e0;
+                        text-align: center; font-size: 12px; color: #888;">
+                ${list.length} בקרים שמורים · לחץ לבחירה
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // סגירה בלחיצה על הרקע
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeSavedControllersPicker();
+    });
+}
+
+function closeSavedControllersPicker() {
+    const el = document.getElementById('savedControllersOverlay');
+    if (el) el.remove();
+}
+
+// ============================================
+// 🌐 חיבור מקומי לבקר (דרך ה-AP של ה-ESP)
+// ============================================
+const LOCAL_BOILER_URL  = 'http://192.168.2.178/blrBoiler';
+const DEFAULT_AP_PASS   = 'brand2016';
+const SAVED_AP_PASS_KEY = 'savedApPasswords';   // {ssid: password}
+const LAST_LOCAL_SSID_KEY = 'lastLocalSsid';    // SSID של החיבור המקומי האחרון שהצליח
+
+function getSavedApPasswords() {
+    try {
+        const raw = localStorage.getItem(SAVED_AP_PASS_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+}
+
+function rememberApPassword(ssid, password) {
+    try {
+        const map = getSavedApPasswords();
+        map[ssid] = password;
+        localStorage.setItem(SAVED_AP_PASS_KEY, JSON.stringify(map));
+    } catch (e) { console.warn('שמירת סיסמה נכשלה:', e); }
+}
+
+// מחזיר את ה-SSID של החיבור המקומי האחרון שהצליח, או null
+function getLastLocalSsid() {
+    try {
+        return localStorage.getItem(LAST_LOCAL_SSID_KEY) || null;
+    } catch { return null; }
+}
+
+function setLastLocalSsid(ssid) {
+    try {
+        localStorage.setItem(LAST_LOCAL_SSID_KEY, String(ssid));
+    } catch (e) { console.warn('שמירת SSID אחרון נכשלה:', e); }
+}
+
+function clearLastLocalSsid() {
+    try {
+        localStorage.removeItem(LAST_LOCAL_SSID_KEY);
+    } catch (e) { console.warn('מחיקת SSID אחרון נכשלה:', e); }
+}
+
+function openLocalConnectPicker() {
+    // ודא שאנחנו באפליקציה ולא בדפדפן רגיל
+    if (typeof AndroidInterface === 'undefined' ||
+        typeof AndroidInterface.connectToWifi !== 'function' ||
+        typeof AndroidInterface.scanForNearbyNetworks !== 'function') {
+        showMessage('חיבור מקומי זמין רק באפליקציית האנדרואיד', 'error', 4000);
+        return;
+    }
+
+    // הסר אם כבר קיים
+    closeLocalConnect();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'localConnectOverlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10000; padding: 20px;
+    `;
+    overlay.innerHTML = `
+        <div style="
+            background: #f5f5f5; border-radius: 16px; max-width: 480px; width: 100%;
+            max-height: 85vh; display: flex; flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
+        ">
+            <div style="background: #4a9d4a; color: white; padding: 16px 20px;
+                        display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 18px;">🌐 חיבור מקומי לבקר</h2>
+                <button onclick="closeLocalConnect()"
+                        style="background: none; border: none; color: white;
+                               font-size: 24px; cursor: pointer; padding: 0 4px;">×</button>
+            </div>
+            <div style="padding: 12px 16px; background: white; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; align-items: center;">
+                <button onclick="scanLocalNetworks()"
+                        style="background: #6c8eb7; color: white; border: none;
+                               padding: 8px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;">
+                    🔄 סרוק שוב
+                </button>
+                <span id="localConnectInstructions" style="font-size: 12px; color: #888;">
+                    סורק רשתות זמינות...
+                </span>
+            </div>
+            <div id="localConnectStatus" style="display:none; padding: 12px 16px;
+                background: #fffbeb; border-bottom: 1px solid #fde68a;
+                font-size: 14px; color: #92400e;"></div>
+            <div id="localConnectList" style="padding: 12px 16px; overflow-y: auto; flex: 1;
+                background: #f5f5f5;">
+                <div style="text-align:center; padding:30px; color:#666;">
+                    <div style="font-size: 32px; margin-bottom: 10px;
+                                animation: spin 1.5s linear infinite;">⏳</div>
+                    <div>סורק רשתות WiFi בסביבה...</div>
+                    <div style="font-size: 11px; color:#aaa; margin-top: 8px;">
+                        (לוקח עד 3 שניות)
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // הוסף אנימציית סיבוב אם לא קיימת
+    if (!document.getElementById('spinKeyframes')) {
+        const style = document.createElement('style');
+        style.id = 'spinKeyframes';
+        style.textContent = '@keyframes spin { 100% { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+    }
+
+    // סגירה בלחיצה על הרקע
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeLocalConnect();
+    });
+
+    // 💡 התנהגות לפי מספר הבקרים המקומיים השמורים:
+    //    1 → כניסה ישירה ללא בחירה · 2+ → רשימה לבחירה · 0 → סריקה רגילה.
+    const savedLocal = Object.keys(getSavedApPasswords());
+    if (savedLocal.length === 1) {
+        const ssid = savedLocal[0];
+        setLastLocalSsid(ssid);
+        showQuickConnectView(ssid);
+        setTimeout(() => quickConnectToLast(ssid), 250);   // בקר יחיד — מתחבר ישר
+    } else if (savedLocal.length >= 2) {
+        showSavedLocalListView(savedLocal);                // 2+ — רשימה לבחירה
+    } else {
+        const lastSsid = getLastLocalSsid();
+        if (lastSsid) {
+            showQuickConnectView(lastSsid);
+        } else {
+            // אין היסטוריה - מתחילים בסריקה כרגיל
+            setTimeout(() => scanLocalNetworks(), 100);
+        }
+    }
+}
+
+// מסך "חיבור מהיר" - מציג רק את הבקר האחרון, עם כפתור גדול להתחבר
+// וכפתור קטן לחיפוש בקרים אחרים
+function showQuickConnectView(ssid) {
+    const list = document.getElementById('localConnectList');
+    const instr = document.getElementById('localConnectInstructions');
+    if (!list) return;
+    if (instr) instr.textContent = 'חיבור אחרון שמור — לחץ "התחבר" או חפש חדש';
+
+    const ssidEscaped = String(ssid).replace(/'/g, "\\'");
+
+    list.innerHTML = `
+        <div style="text-align:center; padding: 10px;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 6px;">חיבור מקומי אחרון</div>
+            <div style="background: white; border: 2px solid #4a9d4a; border-radius: 12px;
+                        padding: 24px 18px; margin-bottom: 14px;
+                        box-shadow: 0 2px 10px rgba(74,157,74,0.1);">
+                <div style="font-size: 36px; margin-bottom: 8px;">📡</div>
+                <div style="font-size: 22px; font-weight: bold; color: #2d3748; margin-bottom: 4px;">
+                    ${ssid}
+                </div>
+                <div style="font-size: 12px; color: #888;">בקר שמור · מוכן לחיבור</div>
+            </div>
+
+            <button onclick="quickConnectToLast('${ssidEscaped}')"
+                    style="background: #4a9d4a; color: white; border: none;
+                           padding: 16px; border-radius: 10px; font-size: 17px;
+                           font-weight: bold; cursor: pointer; width: 100%;
+                           box-shadow: 0 4px 12px rgba(74,157,74,0.3);">
+                ✅ התחבר ל-${ssid}
+            </button>
+
+            <div style="display: flex; gap: 8px; margin-top: 14px;">
+                <button onclick="scanLocalNetworks()"
+                        style="flex: 1; background: white; color: #4a9d4a;
+                               border: 1px solid #4a9d4a; padding: 10px;
+                               border-radius: 8px; font-size: 13px; cursor: pointer;">
+                    🔍 חפש בקר אחר
+                </button>
+                <button onclick="forgetLastAndScan()"
+                        style="flex: 1; background: white; color: #888;
+                               border: 1px solid #ccc; padding: 10px;
+                               border-radius: 8px; font-size: 13px; cursor: pointer;">
+                    🗑 שכח חיבור זה
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// התחברות מהירה לחיבור האחרון - בלי בקשת סיסמה (כי שמורה)
+async function quickConnectToLast(ssid) {
+    const savedPasswords = getSavedApPasswords();
+    const password = savedPasswords[ssid] || DEFAULT_AP_PASS;
+
+    showLocalConnectStatus(`⏳ מתחבר ל-"${ssid}"... (יופיע דיאלוג אישור)`, 'info');
+
+    try {
+        const connected = await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Timeout - 25 שניות')), 25000);
+            window.onWifiConnected = function(success, connectedSsid) {
+                clearTimeout(timeout);
+                window.onWifiConnected = null;
+                resolve(!!success);
+            };
+
+            AndroidInterface.connectToWifi(
+                ssid,
+                password,
+                JSON.stringify({ bind: true, timeoutSec: 20 })
+            );
+        });
+
+        if (!connected) {
+            // ייתכן שהסיסמה השתנתה - הצע למשתמש להזין מחדש
+            showLocalConnectStatus(`❌ ההתחברות נכשלה. אולי הסיסמה השתנתה?`, 'error');
+            setTimeout(() => showPasswordInputForNetwork(ssid), 1500);
+            return;
+        }
+
+        setLastLocalSsid(ssid);   // 💾 עדכן זמן אחרון
+
+        showLocalConnectStatus(`✅ התחברת ל-"${ssid}". טוען את דף הבקר...`, 'success');
+        await new Promise(r => setTimeout(r, 1500));
+        openInNewWindow(LOCAL_BOILER_URL);
+
+    } catch (e) {
+        console.error('שגיאת חיבור מהיר:', e);
+        showLocalConnectStatus(`❌ שגיאה: ${e.message}`, 'error');
+    }
+}
+
+// שוכח את החיבור האחרון ומתחיל סריקה רגילה
+function forgetLastAndScan() {
+    clearLastLocalSsid();
+    scanLocalNetworks();
+}
+
+function closeLocalConnect() {
+    const el = document.getElementById('localConnectOverlay');
+    if (el) el.remove();
+    // נקה callback שעלול להישאר
+    window.onWifiConnected = null;
+}
+
+// ============================================
+// 🌐 בחירה ומחיקה ברשימת החיבור המקומי
+// ============================================
+
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// מציג את רשימת הבקרים המקומיים השמורים לבחירה (כשיש 2+)
+function showSavedLocalListView(ssids) {
+    const list  = document.getElementById('localConnectList');
+    const instr = document.getElementById('localConnectInstructions');
+    if (!list) return;
+    if (instr) instr.textContent = 'בחר בקר מקומי מהרשימה';
+
+    const rows = ssids.map(ssid => {
+        const js   = String(ssid).replace(/'/g, "\\'");
+        const safe = escapeHtml(ssid);
+        return `
+        <div style="background:white;border:1px solid #e0e0e0;border-radius:10px;
+                    padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;
+                    cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;"
+             onclick="quickConnectToLast('${js}')">
+            <div style="font-size:24px;">📡</div>
+            <div style="flex:1;min-width:0;font-weight:bold;color:#2d3748;">${safe}</div>
+            <button type="button" onclick="event.stopPropagation(); deleteLocalController('${js}')"
+                    title="מחק חיבור מקומי"
+                    style="background:none;border:none;color:#c0392b;font-size:18px;cursor:pointer;
+                           padding:4px 8px;-webkit-tap-highlight-color:transparent;">🗑</button>
+        </div>`;
+    }).join('');
+
+    list.innerHTML = rows + `
+        <button type="button" onclick="scanLocalNetworks()"
+                style="width:100%;background:white;color:#4a9d4a;border:1px solid #4a9d4a;
+                       padding:10px;border-radius:8px;font-size:13px;cursor:pointer;margin-top:6px;">
+            🔍 חפש בקר אחר
+        </button>`;
+}
+
+// מחיקה אמיתית של חיבור מקומי מהרשימה (savedApPasswords)
+async function deleteLocalController(ssid) {
+    const ok = await uiConfirm(`למחוק את החיבור המקומי "${escapeHtml(ssid)}"?`);
+    if (!ok) return;
+    try {
+        const map = getSavedApPasswords();
+        delete map[ssid];
+        localStorage.setItem(SAVED_AP_PASS_KEY, JSON.stringify(map));
+        if (getLastLocalSsid() === ssid) clearLastLocalSsid();
+    } catch (e) { console.error('מחיקת חיבור מקומי נכשלה:', e); }
+
+    const remaining = Object.keys(getSavedApPasswords());
+    if (document.getElementById('localConnectOverlay')) {
+        if (remaining.length >= 1) showSavedLocalListView(remaining);
+        else { closeLocalConnect(); showMessage('אין חיבורים מקומיים שמורים', 'info'); }
+    }
+}
+
+// ============================================
+// ⚙️ ניהול בקרים — צפייה ומחיקה לשתי הרשימות
+// ============================================
+
+// ============================================
+// 🔄 בדיקת עדכון גרסה (אוטומטית בעליית האפליקציה)
+// ============================================
+// המקור לבדיקת הגרסה. ברירת מחדל ריקה = בודקים מול כתובת האפליקציה עצמה
+// (location.href) ומחלצים את displayVersion מתוך ה-HTML.
+// אפשר להצביע לכתובת API שמחזירה JSON: { "version":"1.0.4", "url":"https://.../app.apk", "notes":"..." }
+const VERSION_SOURCE_URL = SERVER_BASE + '/apk/version';   // endpoint קיים בשרת
+const UPDATE_FLAG_KEY = 'updateAvailable';
+
+// השוואת גרסאות סמנטיות: מחזיר true אם a חדש מ-b ("1.0.4" > "1.0.3")
+function isNewerVersion(a, b) {
+    const pa = String(a).split('.').map(n => parseInt(n, 10) || 0);
+    const pb = String(b).split('.').map(n => parseInt(n, 10) || 0);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+        const x = pa[i] || 0, y = pb[i] || 0;
+        if (x > y) return true;
+        if (x < y) return false;
+    }
+    return false;
+}
+
+// הודעה פשוטה עם כפתור אישור (עובד מעל overlays, בניגוד ל-alert של WebView)
+function uiAlert(message) {
+    return new Promise((resolve) => {
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;' +
+            'align-items:center;justify-content:center;z-index:11000;padding:20px;';
+        ov.innerHTML =
+            '<div style="background:#fff;border-radius:14px;padding:22px;max-width:340px;width:100%;' +
+            'text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.3);">' +
+                '<div style="font-size:15px;color:#333;line-height:1.6;margin-bottom:18px;">' + message + '</div>' +
+                '<button type="button" id="uiAlertOk" style="width:100%;background:#4a9d4a;color:#fff;' +
+                'border:none;padding:11px;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">אישור</button>' +
+            '</div>';
+        document.body.appendChild(ov);
+        const done = () => { ov.remove(); resolve(); };
+        ov.querySelector('#uiAlertOk').onclick = done;
+        ov.addEventListener('click', (e) => { if (e.target === ov) done(); });
+    });
+}
+
+// שולף את הגרסה האחרונה — או מ-JSON (API) או מתוך ה-HTML של האפליקציה עצמה
+async function fetchLatestVersion() {
+    const url = VERSION_SOURCE_URL || location.href.split('#')[0];
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const ct = res.headers.get('content-type') || '';
+    if (ct.indexOf('json') !== -1) {
+        const j = await res.json();
+        // תמיד בונים את כתובת ההורדה מ-SERVER_BASE (https) כדי למנוע חסימת cleartext
+        const dl = j.downloadUrl ? (SERVER_BASE + j.downloadUrl) : (SERVER_BASE + '/apk/latest');
+        return {
+            version: String(j.version || j.displayVersion || '').trim(),
+            url: dl,
+            notes: j.notes || ''
+        };
+    }
+    // אחרת זה ה-HTML של האפליקציה — מחלצים את displayVersion
+    const text = await res.text();
+    const m = text.match(/displayVersion\s*:\s*['"]([^'"]+)['"]/);
+    return { version: m ? m[1].trim() : '', url: '', notes: '' };
+}
+
+let updateChecked = false;
+// בדיקה שקטה בעליית האפליקציה: אם יש גרסה חדשה — שומר דגל ומציג הערה קטנה
+async function checkAppUpdateSilently() {
+    if (updateChecked) return;
+    updateChecked = true;
+    try {
+        const info = await fetchLatestVersion();
+        const current = APP_CONFIG.app.displayVersion;
+        if (info.version && isNewerVersion(info.version, current)) {
+            try { localStorage.setItem(UPDATE_FLAG_KEY, JSON.stringify(info)); } catch (e) {}
+            showUpdateNotice(info.version);
+        } else {
+            try { localStorage.removeItem(UPDATE_FLAG_KEY); } catch (e) {}
+            hideUpdateNotice();
+        }
+    } catch (e) {
+        console.warn('בדיקת גרסה נכשלה:', e.message);
+        showUpdateNoticeFromStorage();   // אם נכשל אך יש דגל קודם — נשאיר את ההערה
+    }
+}
+
+function getStoredUpdate() {
+    try { return JSON.parse(localStorage.getItem(UPDATE_FLAG_KEY) || 'null'); }
+    catch (e) { return null; }
+}
+
+// האם יש עדכון ממתין (גרסה גבוהה מזו של האפליקציה)
+function hasPendingUpdate() {
+    const d = getStoredUpdate();
+    return !!(d && d.version && isNewerVersion(d.version, APP_CONFIG.app.displayVersion));
+}
+
+function showUpdateNoticeFromStorage() {
+    const d = getStoredUpdate();
+    if (d && d.version) showUpdateNotice(d.version);
+}
+
+// הערה קטנה ולחיצה בראש מסך הלוגין + הבהוב מספר הגרסה
+function showUpdateNotice(version) {
+    // 1) הערה מתחת למספר הגרסה בכותרת + הבהוב מספר הגרסה
+    const hint = document.getElementById('versionUpdateHint');
+    if (hint) {
+        hint.textContent = '🔔 גרסה ' + version + ' זמינה — לחץ לעדכון';
+        hint.style.display = 'inline-block';
+    }
+    const vLabel = document.getElementById('appVersionLabel');
+    if (vLabel) {
+        vLabel.classList.add('update-available');
+        vLabel.onclick = openUpdateFromNotice;
+    }
+
+    // 2) באנר קטן בתוכן (גיבוי/בולט יותר)
+    let el = document.getElementById('updateNotice');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'updateNotice';
+        el.style.cssText = 'background:#fff7e6;color:#8a5a00;border:1px solid #ffd591;' +
+            'border-radius:8px;padding:8px 12px;margin:10px 0;font-size:13px;display:flex;' +
+            'align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;';
+        el.onclick = openUpdateFromNotice;
+        const container = document.getElementById('messageContainer');
+        if (container && container.parentNode) {
+            container.parentNode.insertBefore(el, container.nextSibling);
+        } else {
+            document.body.appendChild(el);
+        }
+    }
+    el.innerHTML = '🔔 <span style="flex:1;">קיימת גרסה חדשה (' + escapeHtml(version) +
+                   ') — מומלץ לעדכן</span><span style="color:#b8860b;font-weight:bold;">עדכן ›</span>';
+    el.style.display = 'flex';
+}
+
+function hideUpdateNotice() {
+    const hint = document.getElementById('versionUpdateHint');
+    if (hint) hint.style.display = 'none';
+    const vLabel = document.getElementById('appVersionLabel');
+    if (vLabel) { vLabel.classList.remove('update-available'); vLabel.onclick = null; }
+    const el = document.getElementById('updateNotice');
+    if (el) el.style.display = 'none';
+}
+
+let downloadStarting = false;
+
+// משוב מיידי בלחיצה על "עדכן": טוסט + שינוי התיבה ל"מתחיל הורדה…"
+function uiToast(message, ms) {
+    let t = document.getElementById('uiToast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'uiToast';
+        t.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);' +
+            'background:#1f2937;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;' +
+            'box-shadow:0 8px 24px rgba(0,0,0,0.35);z-index:12000;max-width:90%;text-align:center;';
+        document.body.appendChild(t);
+    }
+    t.textContent = message;
+    t.style.display = 'block';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.display = 'none'; }, ms || 4000);
+}
+
+function markUpdateStarting() {
+    // התיבה בכותרת
+    const hint = document.getElementById('versionUpdateHint');
+    if (hint) {
+        hint.textContent = '⏳ מתחיל הורדה…';
+        hint.style.background = 'rgba(59,130,246,0.30)';
+        hint.style.color = '#dbeafe';
+    }
+    const vLabel = document.getElementById('appVersionLabel');
+    if (vLabel) vLabel.classList.remove('update-available');  // עוצר את ההבהוב
+    // הבאנר בתוכן
+    const el = document.getElementById('updateNotice');
+    if (el) {
+        el.style.background = '#dbeafe';
+        el.style.color = '#1e40af';
+        el.style.borderColor = '#93c5fd';
+        el.innerHTML = '⏳ <span style="flex:1;">מתחיל הורדה… בדוק בהתראות / בתיקיית ההורדות</span>';
+    }
+    // התיבה בחלון ניהול בקרים
+    const f = document.getElementById('manageFooter');
+    if (f) f.innerHTML = '<div style="background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;' +
+        'border-radius:8px;padding:9px 12px;font-size:13px;text-align:center;">⏳ מתחיל הורדה…</div>';
+}
+
+async function openUpdateFromNotice() {
+    if (downloadStarting) { uiToast('⏳ ההורדה כבר התחילה…'); return; }  // מונע לחיצות חוזרות
+    const info = getStoredUpdate() || {};
+    if (info.url) {
+        downloadStarting = true;
+        // 1) משוב מיידי — לפני שמתחילים את ההורדה בפועל
+        markUpdateStarting();
+        uiToast('⏳ מתחיל הורדה של גרסה ' + (info.version || '') + '…', 6000);
+        // 2) מתחילים את ההורדה (קצת אחרי, כדי שהמשוב יצויר קודם)
+        setTimeout(() => startAppDownload(info.url), 60);
+        // מאפשרים לחיצה חוזרת רק אחרי 8 שניות (אם המשתמש ביטל)
+        setTimeout(() => { downloadStarting = false; }, 8000);
+    } else {
+        await uiAlert('קיימת גרסה חדשה (' + escapeHtml(info.version || '') +
+                      ').<br>פתח את קישור ההורדה / החנות כדי לעדכן.');
+    }
+}
+
+function startAppDownload(url) {
+    if (!url) { uiAlert('לא צויינה כתובת הורדה.'); return; }
+    // אם האפליקציה תתמוך בהתקנה ישירה בעתיד — נשתמש בה
+    if (typeof AndroidInterface !== 'undefined' && typeof AndroidInterface.installUpdate === 'function') {
+        AndroidInterface.installUpdate(url);
+        return;
+    }
+    // אחרת מורידים בדיוק כמו דף ה-install שעובד: קליק על קישור, כך שה-DownloadListener של
+    // ה-WebView יתפוס את ההורדה (openNewWindow פותח WebView פנימי שלא יודע להתקין APK).
+    try {
+        const a = document.createElement('a');
+        a.href = url;
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    } catch (e) {
+        window.location.href = url;
+    }
+}
+
+function showManageControllers() {
+    closeManage();
+    const ov = document.createElement('div');
+    ov.id = 'manageOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);' +
+        'display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;';
+    ov.innerHTML =
+        '<div style="background:#f5f5f5;border-radius:16px;max-width:480px;width:100%;' +
+        'max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">' +
+            '<div style="background:#374151;color:#fff;padding:16px 20px;display:flex;' +
+            'justify-content:space-between;align-items:center;">' +
+                '<h2 style="margin:0;font-size:18px;">⚙️ ניהול בקרים</h2>' +
+                '<button type="button" onclick="closeManage()" style="background:none;border:none;' +
+                'color:#fff;font-size:24px;cursor:pointer;padding:0 4px;">×</button>' +
+            '</div>' +
+            '<div id="manageBody" style="padding:14px 16px;overflow-y:auto;flex:1;"></div>' +
+            '<div id="manageFooter" style="padding:12px 16px;border-top:1px solid #e2e2e2;background:#fff;"></div>' +
+        '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', (e) => { if (e.target === ov) closeManage(); });
+    renderManage();
+}
+
+function closeManage() {
+    const el = document.getElementById('manageOverlay');
+    if (el) el.remove();
+}
+
+function mgSectionTitle(txt) {
+    return `<div style="font-size:13px;font-weight:bold;color:#555;margin:6px 2px 8px;">${txt}</div>`;
+}
+function mgEmpty(txt) {
+    return `<div style="color:#aaa;font-size:13px;text-align:center;padding:12px;">${txt}</div>`;
+}
+function mgRow(icon, name, sub, isDefault, defaultCall, delCall) {
+    const defaultCtrl = isDefault
+        ? '<span style="background:#f0b429;color:#fff;font-size:11px;padding:3px 9px;' +
+          'border-radius:10px;white-space:nowrap;">⭐ ברירת מחדל</span>'
+        : `<button type="button" onclick="${defaultCall}" title="קבע כברירת מחדל (יפתח אוטומטית)"
+             style="background:none;border:1px solid #f0b429;color:#b8860b;font-size:11px;
+                    padding:3px 9px;border-radius:10px;cursor:pointer;white-space:nowrap;
+                    -webkit-tap-highlight-color:transparent;">☆ קבע</button>`;
+    return `<div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;
+                padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;
+                -webkit-tap-highlight-color:transparent;">
+        <div style="font-size:22px;">${icon}</div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-weight:bold;color:#2d3748;">${name}</div>
+            ${sub ? `<div style="font-size:12px;color:#888;font-family:monospace;margin-top:2px;">${sub}</div>` : ''}
+        </div>
+        ${defaultCtrl}
+        <button type="button" onclick="${delCall}" title="מחק"
+            style="background:none;border:none;color:#c0392b;font-size:18px;cursor:pointer;
+                   padding:4px 6px;-webkit-tap-highlight-color:transparent;">🗑</button>
+    </div>`;
+}
+
+function renderManage() {
+    const body = document.getElementById('manageBody');
+    if (!body) return;
+
+    const cloud = getSavedControllers();
+    const local = Object.keys(getSavedApPasswords());
+
+    const cloudHtml = cloud.length
+        ? cloud.map((c, i) => {
+            const id = String(c.clientId).replace(/'/g, "\\'");
+            const name = escapeHtml(c.espName ? c.espName : 'בקר ' + c.clientId);
+            return mgRow('🏠', name, escapeHtml(String(c.clientId)),
+                         i === 0, `setDefaultCloud('${id}')`, `manageDeleteCloud('${id}')`);
+        }).join('')
+        : mgEmpty('אין בקרים בכניסה למערכת');
+
+    const localHtml = local.length
+        ? local.map((ssid, i) => {
+            const js = String(ssid).replace(/'/g, "\\'");
+            return mgRow('📡', escapeHtml(ssid), '',
+                         i === 0, `setDefaultLocal('${js}')`, `manageDeleteLocal('${js}')`);
+        }).join('')
+        : mgEmpty('אין חיבורים מקומיים שמורים');
+
+    body.innerHTML =
+        mgSectionTitle('☁️ כניסה למערכת (ענן)') + cloudHtml +
+        '<div style="height:14px;"></div>' +
+        mgSectionTitle('🌐 חיבור מקומי') + localHtml;
+
+    renderManageFooter();
+}
+
+// העברת בקר ענן לראש הרשימה = ברירת מחדל (זה הבקר שייפתח אוטומטית)
+function setDefaultCloud(clientId) {
+    const list = getSavedControllers();
+    const idx = list.findIndex(c => String(c.clientId) === String(clientId));
+    if (idx <= 0) return;   // כבר ראשון או לא נמצא
+    const [item] = list.splice(idx, 1);
+    list.unshift(item);
+    try { localStorage.setItem(SAVED_CONTROLLERS_KEY, JSON.stringify(list)); }
+    catch (e) { console.error('עדכון סדר נכשל:', e); }
+    renderManage();
+}
+
+// העברת חיבור מקומי לראש הרשימה = ברירת מחדל
+function setDefaultLocal(ssid) {
+    const map = getSavedApPasswords();
+    if (!(ssid in map)) return;
+    const reordered = {};
+    reordered[ssid] = map[ssid];                 // הנבחר ראשון
+    Object.keys(map).forEach(k => { if (k !== ssid) reordered[k] = map[k]; });
+    try {
+        localStorage.setItem(SAVED_AP_PASS_KEY, JSON.stringify(reordered));
+        setLastLocalSsid(ssid);
+    } catch (e) { console.error('עדכון סדר נכשל:', e); }
+    renderManage();
+}
+
+// כותרת תחתית עם גרסה + סטטוס עדכון
+function renderManageFooter() {
+    const f = document.getElementById('manageFooter');
+    if (!f) return;
+    const current = escapeHtml(APP_CONFIG.app.displayVersion);
+    const upd = getStoredUpdate();
+    if (upd && upd.version && isNewerVersion(upd.version, APP_CONFIG.app.displayVersion)) {
+        f.innerHTML =
+            '<div onclick="openUpdateFromNotice()" style="background:#fff7e6;color:#8a5a00;' +
+            'border:1px solid #ffd591;border-radius:8px;padding:9px 12px;font-size:13px;cursor:pointer;' +
+            'display:flex;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;">' +
+            '🔔 <span style="flex:1;">קיימת גרסה חדשה (' + escapeHtml(upd.version) + ')</span>' +
+            '<span style="color:#b8860b;font-weight:bold;">עדכן ›</span></div>' +
+            '<div style="text-align:center;font-size:11px;color:#aaa;margin-top:6px;">גרסה נוכחית: ' + current + '</div>';
+    } else {
+        f.innerHTML = '<div style="text-align:center;font-size:11px;color:#aaa;">גרסה נוכחית: ' + current + '</div>';
+    }
+}
+
+async function manageDeleteCloud(clientId) {
+    const ok = await uiConfirm(`למחוק את בקר ${clientId} מהרשימה?`);
+    if (!ok) return;
+    const list = getSavedControllers().filter(c => String(c.clientId) !== String(clientId));
+    try { localStorage.setItem(SAVED_CONTROLLERS_KEY, JSON.stringify(list)); }
+    catch (e) { console.error('מחיקה נכשלה:', e); }
+    renderManage();
+}
+
+async function manageDeleteLocal(ssid) {
+    const ok = await uiConfirm(`למחוק את החיבור המקומי "${escapeHtml(ssid)}"?`);
+    if (!ok) return;
+    try {
+        const map = getSavedApPasswords();
+        delete map[ssid];
+        localStorage.setItem(SAVED_AP_PASS_KEY, JSON.stringify(map));
+        if (getLastLocalSsid() === ssid) clearLastLocalSsid();
+    } catch (e) { console.error('מחיקה נכשלה:', e); }
+    renderManage();
+}
+
+async function scanLocalNetworks() {
+    const list = document.getElementById('localConnectList');
+    const instr = document.getElementById('localConnectInstructions');
+    if (!list) return;
+
+    list.innerHTML = `
+        <div style="text-align:center; padding:30px; color:#666;">
+            <div style="font-size: 32px; margin-bottom: 10px;
+                        animation: spin 1.5s linear infinite;">⏳</div>
+            <div>סורק רשתות WiFi בסביבה...</div>
+        </div>
+    `;
+    if (instr) instr.textContent = 'סורק רשתות זמינות...';
+
+    // השהיה קלה לפני קריאה חוסמת — שהדפדפן יספיק לצייר את ה-spinner
+    await new Promise(r => setTimeout(r, 50));
+
+    try {
+        const raw = AndroidInterface.scanForNearbyNetworks();
+        const result = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        const networks = (result && result.networks) || result || [];
+
+        if (!Array.isArray(networks) || networks.length === 0) {
+            list.innerHTML = '<div style="text-align:center; padding:30px; color:#666;">לא נמצאו רשתות זמינות</div>';
+            if (instr) instr.textContent = 'אין רשתות — נסה שוב';
+            return;
+        }
+        renderLocalNetworksList(networks);
+        if (instr) instr.textContent = `נמצאו ${networks.length} רשתות — בחר את ה-AP של הבקר`;
+    } catch (e) {
+        console.error('שגיאת סריקה:', e);
+        list.innerHTML = `<div style="text-align:center; padding:30px; color:#c00;">❌ שגיאה בסריקה: ${e.message}</div>`;
+        if (instr) instr.textContent = 'שגיאה';
+    }
+}
+
+function renderLocalNetworksList(networks) {
+    const list = document.getElementById('localConnectList');
+    if (!list) return;
+
+    // מיון לפי עוצמת אות (אם קיימת)
+    const sorted = [...networks].sort((a, b) => (b.rssi || -100) - (a.rssi || -100));
+
+    list.innerHTML = `
+        <div style="font-size: 12px; color: #666; text-align: center; margin-bottom: 10px;
+                    padding: 8px; background: #eef5ff; border-radius: 6px;">
+            👇 בחר את הרשת של הבקר (לרוב מתחילה ב-"BoilerClient" או שם שהגדרת)
+        </div>
+        ${sorted.map(n => {
+            const ssidSafe = String(n.ssid || '').replace(/'/g, "\\'");
+            const rssiText = (typeof n.rssi === 'number') ? `📶 ${n.rssi} dBm` : '';
+            return `
+                <div onclick="showPasswordInputForNetwork('${ssidSafe}')"
+                     style="background: white; border: 1px solid #e0e0e0; border-radius: 10px;
+                            padding: 14px; margin-bottom: 8px;
+                            cursor: pointer; transition: all 0.15s;
+                            display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: bold; font-size: 15px; color: #2d3748;">
+                            ${n.ssid || '(ללא שם)'}
+                        </div>
+                        <div style="font-size: 12px; color: #888; margin-top: 4px;">
+                            ${rssiText}
+                        </div>
+                    </div>
+                    <div style="color: #4a9d4a; font-size: 20px;">›</div>
+                </div>
+            `;
+        }).join('')}
+    `;
+}
+
+// מציג טופס סיסמה בתוך המודאל (במקום prompt() שלא עובד ב-WebView ללא WebChromeClient)
+function showPasswordInputForNetwork(ssid) {
+    const list = document.getElementById('localConnectList');
+    if (!list) return;
+
+    const savedPasswords = getSavedApPasswords();
+    const defaultPwd = savedPasswords[ssid] || DEFAULT_AP_PASS;
+    const ssidEscaped = String(ssid).replace(/"/g, '&quot;').replace(/'/g, "\\'");
+
+    list.innerHTML = `
+        <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <div style="text-align: center; margin-bottom: 16px;">
+                <div style="font-size: 13px; color: #888;">חיבור לרשת</div>
+                <div style="font-size: 20px; font-weight: bold; color: #2d3748;">${ssid}</div>
+            </div>
+            <label style="display: block; font-size: 13px; color: #555; margin-bottom: 6px;">
+                סיסמת הרשת:
+            </label>
+            <div style="display: flex; gap: 6px; margin-bottom: 16px;">
+                <input type="password"
+                       id="localApPasswordInput"
+                       value="${defaultPwd.replace(/"/g, '&quot;')}"
+                       style="flex: 1; padding: 10px 12px; font-size: 16px;
+                              border: 1px solid #ccc; border-radius: 8px;
+                              text-align: left; direction: ltr;"
+                       autocomplete="off">
+                <button onclick="togglePwdVisibility()"
+                        type="button"
+                        title="הצג/הסתר"
+                        style="background: #eee; border: none; padding: 0 12px;
+                               border-radius: 8px; cursor: pointer; font-size: 18px;">
+                    👁
+                </button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="doLocalConnect('${ssidEscaped}')"
+                        style="flex: 2; background: #4a9d4a; color: white; border: none;
+                               padding: 14px; border-radius: 8px; font-size: 16px; cursor: pointer;
+                               font-weight: bold;">
+                    ✅ התחבר
+                </button>
+                <button onclick="scanLocalNetworks()"
+                        style="flex: 1; background: #aaa; color: white; border: none;
+                               padding: 14px; border-radius: 8px; font-size: 14px; cursor: pointer;">
+                    ↩ חזור
+                </button>
+            </div>
+            <div style="text-align: center; font-size: 11px; color: #999; margin-top: 12px;">
+                ברירת מחדל: brand2016 · יישמר לפעם הבאה
+            </div>
+        </div>
+    `;
+    // ❌ ללא autofocus — שלא יקרה Enter מקרי ממקלדת אנדרואיד
+    // המשתמש יקיש על השדה במפורש אם רוצה לערוך
+}
+
+function togglePwdVisibility() {
+    const inp = document.getElementById('localApPasswordInput');
+    if (!inp) return;
+    inp.type = (inp.type === 'password') ? 'text' : 'password';
+}
+
+async function doLocalConnect(ssid) {
+    const inp = document.getElementById('localApPasswordInput');
+    const password = inp ? inp.value : '';
+
+    if (!password) {
+        showLocalConnectStatus('סיסמה ריקה — נא להזין סיסמה', 'error');
+        if (inp) inp.focus();
+        return;
+    }
+
+    showLocalConnectStatus(`⏳ מתחבר לרשת "${ssid}"... (יופיע דיאלוג אישור)`, 'info');
+
+    try {
+        const connected = await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Timeout - 25 שניות')), 25000);
+            window.onWifiConnected = function(success, connectedSsid) {
+                clearTimeout(timeout);
+                window.onWifiConnected = null;
+                resolve(!!success);
+            };
+
+            AndroidInterface.connectToWifi(
+                ssid,
+                password,
+                JSON.stringify({ bind: true, timeoutSec: 20 })
+            );
+        });
+
+        if (!connected) {
+            showLocalConnectStatus(`❌ ההתחברות נכשלה. בדוק את הסיסמה ונסה שוב.`, 'error');
+            return;
+        }
+
+        rememberApPassword(ssid, password);
+        setLastLocalSsid(ssid);   // 💾 שמור גם כחיבור האחרון - כדי להציע אותו בפעם הבאה
+
+        showLocalConnectStatus(`✅ התחברת ל-"${ssid}". טוען את דף הבקר...`, 'success');
+
+        // המתנה ל-DHCP להשלים
+        await new Promise(r => setTimeout(r, 1500));
+
+        openInNewWindow(LOCAL_BOILER_URL);
+
+    } catch (e) {
+        console.error('שגיאת חיבור:', e);
+        showLocalConnectStatus(`❌ שגיאה: ${e.message}`, 'error');
+    }
+}
+
+function showLocalConnectStatus(message, kind) {
+    const status = document.getElementById('localConnectStatus');
+    if (!status) return;
+    status.style.display = 'block';
+    if (kind === 'success') {
+        status.style.background = '#dcfce7';
+        status.style.color      = '#166534';
+    } else if (kind === 'error') {
+        status.style.background = '#fee2e2';
+        status.style.color      = '#991b1b';
+    } else {
+        status.style.background = '#fffbeb';
+        status.style.color      = '#92400e';
+    }
+    status.innerHTML = message;
+}
+
+// 🆕 עדכון: badge בתוך כפתור "כניסה" + הודעה רק כשאין בקרים שמורים
+function updateSavedControllersHint() {
+    const hint  = document.getElementById('savedControllersHint');
+    const badge = document.getElementById('savedCountBadge');
+    const list  = getSavedControllers();
+
+    if (list.length > 0) {
+        // יש בקרים — badge על הכפתור, הודעה נסתרת
+        if (badge) {
+            badge.style.display = 'inline-block';
+            badge.textContent = `📋 ${list.length} שמורים`;
+        }
+        if (hint) hint.style.display = 'none';
+    } else {
+        // אין בקרים — badge נסתר, הודעה מציעה למשתמש להוסיף
+        if (badge) badge.style.display = 'none';
+        if (hint) {
+            hint.style.display = 'block';
+            hint.style.background = '#fff7e6';
+            hint.style.color      = '#7c5300';
+            hint.style.border     = '1px solid #fce6a3';
+            hint.innerHTML = `ℹ️ אין בקרים שמורים — התחבר תחילה דרך "עדכן בקר סמוך פיזית" ושמור הגדרות`;
+        }
+    }
+}
+
+// קריאה ראשונית כשהדף נטען
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateSavedControllersHint);
+} else {
+    updateSavedControllersHint();
+}
+
+    // 🔑 טיפול בהתחברות
+
+async function handleLogin(userName, password) {
+  const apiBase = getApiBaseUrl();
+  console.log('=== LOGIN ATTEMPT ===');
+  console.log('API Base URL being used:', apiBase);
+  console.log('Full login URL:', `${apiBase}/api/auth/user/login`);
+
+  setAuthLoading(true);
+  hideMessages();
+
+  try {
+    console.log('Attempting login...');
+
+    const response = await fetch(`${API_BASE}/api/auth/user/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, password })
+    });
+
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (_) {
+      // יתכן ואין גוף JSON תקין
+    }
+
+    if (response.ok && data && data.status === 'success' && data.token) {
+      authToken = data.token;
+
+      try {
+        localStorage?.setItem('authToken', authToken);
+      } catch (e) {
+        console.log('Cannot save authToken');
+      }
+
+      currentUser = {
+        id: data.user?.id ?? data.user?.userId ?? null,
+        userName: data.user?.userName ?? userName,
+        email: data.user?.email ?? ''
+      };
+
+      try {
+        localStorage?.setItem('currentUser', JSON.stringify(currentUser));
+      } catch (e) {
+        console.log('Cannot save currentUser');
+      }
+
+      showMessage(formatMessage('loginSuccess'), 'success');
+
+      // מעבר מסודר לטעינת מכשירים ואז למסך המכשירים
+      await goToStep(2);
+      await loadDevicesAndGoToStep3();
+
+    } else {
+      const msg = (data && (data.error || data.message)) || `שגיאה בהתחברות (HTTP ${response.status})`;
+      showMessage(msg, 'error');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    showMessage('שגיאה בחיבור לשרת', 'error');
+  } finally {
+    setAuthLoading(false);
+  }
+}
+
+    // 📝 טיפול ברישום
+async function handleRegister(userName, password, email) {
+  setAuthLoading(true);
+  hideMessages();
+
+  try {
+    console.log('Attempting registration...');
+
+    const response = await fetch(`${API_BASE}/api/auth/user/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userName, password, email })
+    });
+
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (_) {
+      // ייתכן ואין גוף JSON תקין
+    }
+
+    if (response.ok && data && data.status === 'success') {
+      showMessage(formatMessage('registerSuccess'), 'success');
+
+      // מעבר למסך התחברות והכנסת שם המשתמש אוטומטית
+      setTimeout(() => {
+        if (!isRegisterMode) return; // כבר במצב התחברות
+        toggleAuthMode(); // מעבר למצב התחברות
+        const userNameEl = document.getElementById('userName');
+        const passwordEl = document.getElementById('password');
+        if (userNameEl) userNameEl.value = userName || '';
+        if (passwordEl) passwordEl.value = '';
+        showMessage(formatMessage('registerSuccessNext'), 'info');
+      }, 1200);
+
+    } else {
+      const msg = (data && (data.error || data.message)) || `שגיאה ברישום (HTTP ${response.status})`;
+      showMessage(msg, 'error');
+    }
+  } catch (error) {
+    console.error('Register error:', error);
+    showMessage('שגיאה בחיבור לשרת', 'error');
+  } finally {
+    setAuthLoading(false);
+  }
+}
+
+    // 🔄 החלפה בין התחברות לרישום
+function toggleAuthMode() {
+  isRegisterMode = !isRegisterMode;
+
+  const registerFields = document.getElementById('registerFields');
+  const authBtnText = document.getElementById('authBtnText');
+  const toggleText = document.getElementById('toggleText');
+  const headerTitle = document.getElementById('headerTitle');
+  const headerSubtitle = document.getElementById('headerSubtitle');
+
+  // הצג/הסתר שדות רישום
+  if (registerFields) registerFields.style.display = isRegisterMode ? 'block' : 'none';
+
+  // טקסט כפתור - שימוש בקונפיגורציה
+  if (authBtnText) authBtnText.textContent = getAuthText('buttonText', isRegisterMode);
+
+  // טקסט קישור מתחלף - שימוש בקונפיגורציה
+  if (toggleText) {
+    toggleText.innerHTML = getAuthText('switchLink', isRegisterMode);
+  }
+
+  // כותרות במסך - שימוש בקונפיגורציה
+  if (headerTitle) headerTitle.textContent = getAuthText('title', isRegisterMode);
+  if (headerSubtitle) headerSubtitle.textContent = getAuthText('subtitle', isRegisterMode);
+
+  // ניקוי שדות רישום כשחוזרים להתחברות
+  if (!isRegisterMode) {
+    const emailEl = document.getElementById('email');
+    const confirmPasswordEl = document.getElementById('confirmPassword');
+    if (emailEl) emailEl.value = '';
+    if (confirmPasswordEl) confirmPasswordEl.value = '';
+  }
+
+  hideMessages();
+}
+
+    // 📱 טעינת מכשירים ומעבר לשלב 3
+async function loadDevicesAndGoToStep3() {
+  try {
+    await loadDevices();
+    await goToStep(3);
+  } catch (error) {
+    console.error('Error loading devices:', error);
+    showMessage('שגיאה בטעינת המכשירים', 'error');
+    setTimeout(() => goToStep(1), 2000);
+  }
+}
+
+    // 📡 טעינת מכשירים מהשרת
+async function loadDevices() {
+  console.log('Loading user devices...');
+
+  const resp = await fetch(`${API_BASE}/api/auth/user/my-devices`, {
+    headers: { 'Authorization': `Bearer ${authToken}` }
+  });
+
+  if (!resp.ok) {
+    throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+  }
+
+  const data = await resp.json();
+
+  if (data && data.status === 'success') {
+    devices = Array.isArray(data.devices) ? data.devices : [];
+    await updateDeviceStatus();
+    updateDeviceDisplay();
+  } else {
+    throw new Error(data?.error || 'שגיאה לא ידועה בעת טעינת המכשירים');
+  }
+}
+
+    // 🔍 עדכון סטטוס מכשירים
+async function updateDeviceStatus() {
+  if (!Array.isArray(devices) || devices.length === 0) return;
+
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/esp/connected-devices`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+
+    if (!response.ok) {
+      console.warn(`connected-devices HTTP ${response.status}: ${response.statusText}`);
+      return;
+    }
+
+    const data = await response.json();
+    if (data && data.status === 'success' && Array.isArray(data.connectedDevices)) {
+      // צור סט של מזהים מחוברים בהשוואה לא תלויה רישיות
+      const connectedSet = new Set(
+        data.connectedDevices
+          .map(cd => String(cd.deviceId ?? cd.device_id ?? '').toLowerCase())
+          .filter(Boolean)
+      );
+
+      // עדכן is_online לכל מכשיר
+      devices = devices.map(d => {
+        const id = String(d.device_id ?? '').toLowerCase();
+        return { ...d, is_online: connectedSet.has(id) };
+      });
+    } else {
+      console.warn('connected-devices: unexpected payload', data);
+    }
+  } catch (error) {
+    console.warn('Could not check device status:', error);
+  }
+}
+
+// ✅ בחירת מכשיר מהרשימה הנגללת
+function selectDeviceFromList(deviceId, ev) {
+  const device = devices.find(d => d.device_id === deviceId);
+  if (!device) return;
+
+  if (!device.is_online) {
+    showMessage('המכשיר לא מחובר כעת', 'error');
+    return;
+  }
+
+  // ניקה בחירה קודמת
+  document.querySelectorAll('.device-item').forEach(item => {
+    item.classList.remove('selected');
+  });
+
+  // מצא את השורה שנלחצה (עם event) או לפי data-device-id אם אין event
+  const container = document.getElementById('deviceScrollContainer');
+  let row = ev?.currentTarget || ev?.target?.closest('.device-item');
+  if (!row && container) {
+    row = Array.from(container.querySelectorAll('.device-item'))
+      .find(el => (el.getAttribute('data-device-id') || '').toLowerCase() === String(deviceId).toLowerCase());
+  }
+  if (row) row.classList.add('selected');
+
+  selectedDevice = device;
+  const connectBtn = document.getElementById('connectBtn');
+  if (connectBtn) connectBtn.disabled = false;
+
+  showMessage(`נבחר מכשיר: ${device.device_name}`, 'success');
+
+  // גלול לשורה אם מחוץ לתצוגה
+  if (container && row) {
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = row.getBoundingClientRect();
+    if (itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom) {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+}
+// 🎨 הוספת פונקציה לניקוי חיפוש
+function clearDeviceSearch() {
+const searchInput = document.getElementById('deviceSearchInput');
+if (searchInput) {
+    searchInput.value = '';
+    filterDevices('');
+}
+}
+
+// ⌨️ הוספת תמיכה במקשי מקלדת לרשימת המכשירים
+document.addEventListener('keydown', (e) => {
+// Enter במהלך שלב ההתחברות
+if (e.key === 'Enter' && currentStep === 1) {
+    document.getElementById('authForm').dispatchEvent(new Event('submit'));
+}
+
+// ניווט ברשימת מכשירים
+if (currentStep === 3 && devices.length > 1) {
+    const items = Array.from(document.querySelectorAll('.device-item:not([style*="display: none"])'));
+    const selectedIndex = items.findIndex(item => item.classList.contains('selected'));
+
+    if (e.key === 'ArrowDown' && selectedIndex < items.length - 1) {
+        e.preventDefault();
+        if (selectedIndex >= 0) {
+            items[selectedIndex].classList.remove('selected');
+        }
+        const nextItem = items[selectedIndex + 1];
+        nextItem.classList.add('selected');
+        nextItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const deviceId = nextItem.getAttribute('data-device-id');
+        const device = devices.find(d => d.device_id.toLowerCase() === deviceId);
+        if (device && device.is_online) {
+            selectedDevice = device;
+            document.getElementById('connectBtn').disabled = false;
+        }
+    }
+
+    if (e.key === 'ArrowUp' && selectedIndex > 0) {
+        e.preventDefault();
+        items[selectedIndex].classList.remove('selected');
+        const prevItem = items[selectedIndex - 1];
+        prevItem.classList.add('selected');
+        prevItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const deviceId = prevItem.getAttribute('data-device-id');
+        const device = devices.find(d => d.device_id.toLowerCase() === deviceId);
+        if (device && device.is_online) {
+            selectedDevice = device;
+            document.getElementById('connectBtn').disabled = false;
+        }
+    }
+
+    if (e.key === 'Enter' && selectedDevice && selectedDevice.is_online) {
+        e.preventDefault();
+        connectToDevice();
+    }
+}
+
+// Escape לביטול בחירת מכשיר
+if (e.key === 'Escape' && currentStep === 3 && selectedDevice) {
+    document.querySelectorAll('.device-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    selectedDevice = null;
+    document.getElementById('connectBtn').disabled = true;
+    hideMessages();
+}
+});
+// 🔍 פונקציה לפילטור מכשירים
+function filterDevices(searchTerm) {
+  const container = document.getElementById('deviceScrollContainer');
+  const items = Array.from(document.querySelectorAll('.device-item'));
+  const term = String(searchTerm || '').toLowerCase().trim();
+
+  // נקה הודעת "לא נמצאו תוצאות" קודמת אם קיימת
+  if (container) {
+    const prevNoResults = container.querySelector('.no-results');
+    if (prevNoResults) prevNoResults.remove();
+  }
+
+  let visibleCount = 0;
+
+  items.forEach(item => {
+    const deviceName = (item.getAttribute('data-device-name') || '').toLowerCase();
+    const deviceId = (item.getAttribute('data-device-id') || '').toLowerCase();
+
+    const match =
+      term === '' ||
+      deviceName.includes(term) ||
+      deviceId.includes(term);
+
+    item.style.display = match ? 'flex' : 'none';
+    if (match) visibleCount++;
+  });
+
+  if (container && visibleCount === 0 && term !== '') {
+    const noResults = document.createElement('div');
+    noResults.className = 'no-results';
+    noResults.innerHTML = `
+      <div class="no-results-icon">🔍</div>
+      <p>לא נמצאו מכשירים התואמים לחיפוש</p>
+      <small>"${searchTerm}"</small>
+    `;
+    container.appendChild(noResults);
+  }
+}
+
+function updateDeviceDisplay() {
+  const deviceContent = document.getElementById('deviceContent');
+
+  if (devices.length === 0) {
+    deviceContent.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📱</div>
+        <h3 style="margin-bottom: 12px; color: var(--text-primary);">אין מכשירים רשומים</h3>
+        <p style="margin-bottom: 24px;">לא נמצאו בקרים במערכת שלך</p>
+        <button class="btn" onclick="addNewDevice()">הוסף מכשיר ראשון</button>
+      </div>
+    `;
+    return;
+  }
+
+  if (devices.length === 1) {
+    const singleDevice = devices[0];
+
+    deviceContent.innerHTML = `
+      <div style="text-align: center; padding: 40px 20px;">
+        <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div>
+        <h3 style="margin-bottom: 12px; color: var(--text-primary);">מתחבר למכשיר</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 16px;">${singleDevice.device_name}</p>
+        <p style="color: var(--text-secondary); font-size: 14px;">
+          ${singleDevice.is_online ? 'מתחבר אוטומטית...' : 'המכשיר לא מחובר כעת'}
+        </p>
+      </div>
+    `;
+
+    if (singleDevice.is_online) {
+      selectedDevice = singleDevice;
+      setTimeout(() => { connectToSingleDevice(); }, 1500);
+    } else {
+      setTimeout(() => {
+        deviceContent.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <h3 style="margin-bottom: 12px; color: var(--text-primary);">המכשיר לא מחובר</h3>
+            <p style="margin-bottom: 16px; color: var(--text-secondary);">${singleDevice.device_name} (${singleDevice.device_id})</p>
+            <p style="margin-bottom: 24px; color: var(--text-secondary);">אנא ודא שהמכשיר מחובר לרשת ונסה שוב</p>
+            <div class="btn-group">
+              <button class="btn" onclick="refreshDevices()">נסה שוב</button>
+              <button class="btn btn-secondary" onclick="addNewDevice()">הוסף מכשיר נוסף</button>
+            </div>
+          </div>
+        `;
+      }, 2000);
+    }
+    return;
+  }
+
+  // יותר ממכשיר אחד
+  const onlineCount = devices.filter(d => d.is_online).length;
+  const offlineCount = devices.length - onlineCount;
+
+  let deviceHTML = `
+    <div class="device-list-header">
+      <div class="device-list-title">המכשירים שלך</div>
+      <div class="device-count">${devices.length} מכשירים</div>
+    </div>
+  `;
+
+  if (devices.length > 5) {
+    deviceHTML += `
+      <div class="device-search">
+        <input type="text" id="deviceSearchInput" placeholder="חפש מכשיר..." oninput="filterDevices(this.value)">
+        <i class="fas fa-search search-icon"></i>
+      </div>
+    `;
+  }
+
+  deviceHTML += `<div class="device-scroll-container" id="deviceScrollContainer">`;
+
+  const sortedDevices = [...devices].sort((a, b) => {
+    if (a.is_online && !b.is_online) return -1;
+    if (!a.is_online && b.is_online) return 1;
+    return a.device_name.localeCompare(b.device_name);
+  });
+
+  sortedDevices.forEach((device) => {
+    const statusClass = device.is_online ? 'online' : 'offline';
+    const statusText = device.is_online ? 'מחובר' : 'לא מחובר';
+    const itemClass = device.is_online ? '' : 'offline';
+    const dataId = String(device.device_id || '').toLowerCase();
+    const dataName = String(device.device_name || '').toLowerCase();
+
+    deviceHTML += `
+      <div class="device-item ${itemClass}"
+           onclick="selectDeviceFromList('${device.device_id}', event)"
+           data-device-name="${dataName}"
+           data-device-id="${dataId}">
+        <div class="device-item-content">
+          <div class="device-item-name">${device.device_name}</div>
+          <div class="device-item-id">ID: ${device.device_id}</div>
+        </div>
+        <div class="device-item-status ${statusClass}">${statusText}</div>
+      </div>
+    `;
+  });
+
+  deviceHTML += `</div>`;
+
+  if (offlineCount > 0) {
+    deviceHTML += `
+      <div style="text-align: center; margin-top: 12px; font-size: 14px; color: var(--text-secondary);">
+        <i class="fas fa-info-circle" style="margin-left: 6px;"></i>
+        ${onlineCount} מחוברים, ${offlineCount} לא מחוברים
+      </div>
+    `;
+  }
+
+  deviceContent.innerHTML = deviceHTML;
+}
+
+async function connectToSingleDevice() {
+  if (!selectedDevice) {
+    showMessage('שגיאה: לא נמצא מכשיר לחיבור', 'error');
+    return;
+  }
+
+  showMessage(`מתחבר למכשיר ${selectedDevice.device_name}...`, 'info');
+
+  try {
+    await updateDeviceStatus();
+
+    const updatedDevice = devices.find(d => d.device_id === selectedDevice.device_id);
+    if (updatedDevice && updatedDevice.is_online) {
+      showMessage(`נכנס לניהול ${selectedDevice.device_name}...`, 'success');
+
+      setTimeout(() => {
+        // שימוש ב-API_BASE כדי לעבוד גם באנדרואיד (file:/WebView) וגם בדפדפן
+        const baseURL = API_BASE;
+        const port = window.location.port || '11112';
+        const manageURL = `${baseURL}/boilerCloud?espId=${selectedDevice.device_id}&token=${authToken}&port=${port}`;
+
+        console.log('Auto-connecting to single device:', manageURL);
+        window.location.href = manageURL;
+      }, 1000);
+    } else {
+      showMessage('המכשיר התנתק. מציג אפשרויות...', 'error');
+      updateDeviceDisplay();
+    }
+
+  } catch (error) {
+    console.error('Error connecting to single device:', error);
+    showMessage('שגיאה בחיבור למכשיר', 'error');
+    updateDeviceDisplay();
+  }
+}
+
+
+
+    // ✅ בחירת מכשיר
+    function selectDevice(deviceId) {
+        const device = devices.find(d => d.device_id === deviceId);
+        if (!device) return;
+
+        if (!device.is_online) {
+            showMessage('המכשיר לא מחובר כעת', 'error');
+            return;
+        }
+
+        // הסרת בחירה קודמת
+        document.querySelectorAll('.device-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        // בחירת מכשיר נוכחי
+        event.target.closest('.device-card').classList.add('selected');
+
+        selectedDevice = device;
+        document.getElementById('connectBtn').disabled = false;
+
+        showMessage(`נבחר מכשיר: ${device.device_name}`, 'success');
+    }
+
+    // 🔗 חיבור למכשיר
+// 🎨 עדכון קל לפונקציית connectToDevice הקיימת (לטיפול במקרה של מכשירים מרובים)
+async function connectToDevice() {
+  if (!selectedDevice) {
+    showMessage('נא לבחור מכשיר מהרשימה', 'error');
+    return;
+  }
+
+  showMessage(`מתחבר למכשיר ${selectedDevice.device_name}...`, 'info');
+
+  try {
+    await updateDeviceStatus();
+
+    const updatedDevice = devices.find(d => d.device_id === selectedDevice.device_id);
+    if (updatedDevice && updatedDevice.is_online) {
+      setTimeout(() => {
+        // שימוש ב-API_BASE כדי לעבוד גם באנדרואיד (file:/WebView) וגם בדפדפן
+        const baseURL = API_BASE;
+        const port = window.location.port || '11112';
+        const manageURL = `${baseURL}/boilerCloud?espId=${selectedDevice.device_id}&token=${authToken}&port=${port}`;
+
+        console.log('Opening management page:', manageURL);
+        window.open(manageURL, '_blank');
+      }, 1000);
+    } else {
+      showMessage('המכשיר לא מחובר כעת. נסה לרענן את הרשימה.', 'error');
+    }
+  } catch (error) {
+    console.error('Error connecting to device:', error);
+    showMessage('שגיאה בחיבור למכשיר', 'error');
+  }
+}
+
+    // 🔄 רענון מכשירים
+async function refreshDevices() {
+  showMessage('מרענן רשימת מכשירים...', 'info');
+
+  try {
+    await loadDevices();
+    showMessage('הרשימה עודכנה בהצלחה', 'success');
+  } catch (error) {
+    console.error('refreshDevices error:', error);
+    showMessage('שגיאה ברענון הרשימה', 'error');
+  }
+}
+
+
+// טיפול בתוצאות סריקת ESP
+/* window.onESPScanResult = function(result) {
+  console.log('תוצאות סריקת ESP:', result);
+  if (result.found && result.networks.length > 0) {
+    showESPNetworksList(result.networks);
+  } else {
+    showMessage('לא נמצאו רשתות ESP בסביבה', 'warning');
+    showManualESPInstructions();
+  }
+};
+ */
+/* function scanForESPNetworks() {
+  return new Promise((resolve) => {
+    // callback להצלחה/כישלון
+    const originalCallback = window.onESPScanResult;
+    window.onESPScanResult = function(result) {
+      originalCallback(result);
+      resolve(result);
+    };
+    Android.scanForESP();
+    setTimeout(() => {
+      if (!window.scanCompleted) {
+        showMessage('סריקה ארכה יותר מהצפוי...', 'warning');
+        showManualESPInstructions();
+      }
+      resolve(null);
+    }, 10000);
+  });
+}
+ */
+/* function showESPNetworksList(networks) {
+  const deviceContent = document.getElementById('deviceContent');
+
+  let networkHTML = `
+    <div style="padding: 20px;">
+      <h3 style="margin-bottom: 16px;">נמצאו ${networks.length} בקרים:</h3>
+
+      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+  `;
+
+  networks.forEach((network, index) => {
+    const signalStrength = getSignalStrength(network.level);
+    const isSecure = network.capabilities.includes('WPA') || network.capabilities.includes('WEP');
+
+    networkHTML += `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px;
+                  background: white; border-radius: 6px; margin-bottom: 8px; cursor: pointer;"
+           onclick="connectToESPConfig('${network.ssid}')">
+        <div>
+          <strong>${network.ssid}</strong>
+          <div style="font-size: 12px; color: #666;">
+            ${isSecure ? '🔒 מוגן' : '🔓 פתוח'} • עוצמה: ${signalStrength}
+          </div>
+        </div>
+        <button style="padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px;">
+          התחבר
+        </button>
+      </div>
+    `;
+  });
+
+  networkHTML += `
+      </div>
+
+      <div class="btn-group" style="flex-direction: column; gap: 12px;">
+        <button class="btn btn-secondary" onclick="scanForESPNetworks()">
+          סרוק שוב
+        </button>
+        <button class="btn btn-secondary" onclick="showManualESPInstructions()">
+          חיבור ידני
+        </button>
+      </div>
+    </div>
+  `;
+
+  deviceContent.innerHTML = networkHTML;
+  window.scanCompleted = true;
+}
+ */
+function getSignalStrength(level) {
+  if (level > -50) return "מעולה";
+  if (level > -60) return "טוב";
+  if (level > -70) return "בינוני";
+  if (level > -80) return "חלש";
+  return "חלש מאוד";
+}
+
+/* function showManualESPInstructions() {
+  const deviceContent = document.getElementById('deviceContent');
+
+  deviceContent.innerHTML = `
+    <div style="padding: 20px;">
+      <h3 style="margin-bottom: 16px;">לא נמצאו בקרים</h3>
+
+      <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+        <h4>בדוק את הבקר:</h4>
+        <ul style="margin: 8px 0; padding-right: 20px;">
+          <li>ודא שהבקר מופעל</li>
+          <li>בדוק שהוא במצב הגדרה (AP Mode)</li>
+          <li>חפש רשת עם שם המתחיל ב-"esp"</li>
+        </ul>
+      </div>
+
+      <div class="btn-group" style="flex-direction: column; gap: 12px;">
+        <button class="btn" onclick="scanForESPNetworks()">
+          סרוק שוב
+        </button>
+        <button class="btn btn-secondary" onclick="openManualWifiSettings()">
+          פתח הגדרות WiFi
+        </button>
+      </div>
+    </div>
+  `;
+}
+ */
+function openManualWifiSettings() {
+  if (typeof Android !== 'undefined' && typeof Android.openWifiSettings === 'function') {
+    Android.openWifiSettings();
+  }
+
+  showMessage('חפש רשת המתחילה ב-"esp" והתחבר אליה', 'info');
+}
+
+
+let espConnectionTimeout = null;
+
+// Callback לטיפול בתוצאות חיבור WiFi
+window.onWifiConnected = async function(success, ssid) {
+  console.log(`onWifiConnected called: success=${success}, ssid=${ssid}`);
+  
+  if (espConnectionTimeout) {
+    clearTimeout(espConnectionTimeout);
+    espConnectionTimeout = null;
+  }
+  
+  if (success) {
+    showMessage(`Android אישר חיבור ל-${ssid}. מחכה לחיבור אמיתי...`, 'info');
+    
+    // המתן לחיבור אמיתי לרשת
+    const actuallyConnected = await waitForESPConnection();
+    
+    if (!actuallyConnected) {
+      showMessage('לא הצלחנו להתחבר לרשת ESP. עדיין ברשת הביתית.', 'warning');
+      showESPNotReachableOptions();
+      return;
+    }
+    
+    showMessage(`התחבר בהצלחה לרשת ${ssid}!`, 'success');
+    
+    // עכשיו בדוק נגישות ESP
+    setTimeout(async () => {
+      showMessage('בודק נגישות ESP...', 'info');
+      const reachable = await checkESPReachabilityFixed();
+      
+      if (reachable) {
+        showMessage('ESP נגיש! עובר לדף הגדרות...', 'success');
+        setTimeout(() => proceedToConfig(), 1500);
+      } else {
+        showMessage(`התחבר לרשת ${ssid} אך ESP לא נגיש. בדוק את הבקר.`, 'warning');
+        showESPNotReachableOptions();
+      }
+    }, 2000);
+    
+  } else {
+    showMessage(`כישלון בחיבור לרשת ${ssid}`, 'error');
+    showManualConnectionInstructions();
+  }
+};
+
+// אחרי onWifiConnected
+async function waitForESPConnection() {
+    console.log('מחכה לחיבור אמיתי ל-ESP...');
+    
+    for (let i = 0; i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const networkJson = AndroidInterface.getCurrentNetworkInfo();
+        const network = JSON.parse(networkJson);
+        
+        console.log(`בדיקה ${i+1}: ${network.ssid}`);
+        
+        if (network.ssid.includes('espConfig') || network.ssid.includes('ESP')) {
+            console.log('✓ מחובר לESP!');
+            return true;
+        }
+    }
+    
+    console.log('✗ לא הצלחנו להתחבר לESP');
+    return false;
+}
+
+// בדיקת נגישות ESP מתוקנת
+async function checkESPReachabilityFixed() {
+  const hosts = ['192.168.2.178', '192.168.4.1']; // גם IP ברירת מחדל של ESP
+  
+  console.log('Checking ESP reachability...');
+  
+  for (const host of hosts) {
+    console.log(`Testing ESP host: ${host}`);
+    
+    try {
+      // נסה GET פשוט עם timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(`http://${host}/`, {
+        method: 'GET',
+        signal: controller.signal,
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      // בדוק תשובה
+      if (response.status >= 200 && response.status < 500) {
+        console.log(`ESP reachable at ${host} (status: ${response.status})`);
+        
+        // נסה גישה ל-API של ESP
+        try {
+          const apiController = new AbortController();
+          const apiTimeoutId = setTimeout(() => apiController.abort(), 4000);
+          
+          const apiResponse = await fetch(`http://${host}/getEspApkParams`, {
+            method: 'GET',
+            signal: apiController.signal,
+            cache: 'no-cache'
+          });
+          
+          clearTimeout(apiTimeoutId);
+          
+          if (apiResponse.ok) {
+            console.log(`ESP API responsive at ${host}`);
+            localStorage.setItem('ESP_HOST', host);
+            return true;
+          } else {
+            console.log(`ESP at ${host} responds but API returned ${apiResponse.status}`);
+          }
+        } catch (apiError) {
+          console.log(`ESP at ${host} responds but API not accessible:`, apiError.message);
+        }
+        
+        // גם אם ה-API לא עובד, השרת עונה
+        localStorage.setItem('ESP_HOST', host);
+        return true;
+      } else {
+        console.log(`ESP at ${host} returned status ${response.status}`);
+      }
+    } catch (error) {
+      console.log(`ESP at ${host} not reachable:`, error.message);
+    }
+  }
+  
+  console.log('No ESP hosts are reachable');
+  return false;
+}
+
+// פונקציה לטיפול במצב שESP לא נגיש
+function showESPNotReachableOptions() {
+  const deviceContent = document.getElementById('deviceContent');
+  
+  deviceContent.innerHTML = `
+    <div style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">ESP לא נגיש</h3>
+      <p style="margin-bottom: 24px; color: var(--text-secondary);">
+        התחברנו לרשת אך הבקר לא עונה
+      </p>
+
+      <div class="btn-group" style="flex-direction: column; gap: 12px;">
+        <button class="btn" onclick="retryESPConnection()">
+          נסה שוב
+        </button>
+        <button class="btn btn-secondary" onclick="proceedAnywayToConfig()">
+          המשך בכל זאת
+        </button>
+        <button class="btn btn-secondary" onclick="goBackToDeviceList()">
+          חזור לרשימת מכשירים
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// נסה שוב את החיבור לESP
+async function retryESPConnection() {
+  showMessage('בודק שוב נגישות ESP...', 'info');
+  
+  const reachable = await checkESPReachabilityFixed();
+  
+  if (reachable) {
+    showMessage('ESP נגיש! עובר לדף הגדרות...', 'success');
+    setTimeout(() => proceedToConfig(), 1500);
+  } else {
+    showMessage('ESP עדיין לא נגיש', 'warning');
+    showESPNotReachableOptions();
+  }
+}
+
+// המשך בכל זאת לדף הגדרות
+function proceedAnywayToConfig() {
+  showMessage('עובר לדף הגדרות למרות שESP לא נגיש...', 'info');
+  setTimeout(() => proceedToConfig(), 1000);
+}
+
+// פונקציה לחזרה לרשימת מכשירים
+function goBackToDeviceList() {
+  updateDeviceDisplay();
+  hideMessages();
+}
+
+// פונקציה להעברה לדף הגדרות
+function proceedToConfig() {
+  console.log('proceedToConfig called');
+  
+  const userName = (currentUser && currentUser.userName) ? currentUser.userName : '';
+  console.log('Proceeding to config with userName:', userName);
+  
+  try {
+    const url = getConfigPageUrl(userName);
+    console.log('Config URL:', url);
+    
+    showMessage('עובר לדף הגדרות בקר...', 'success');
+    
+    setTimeout(() => {
+      window.location.href = url;
+    }, 1000);
+    
+  } catch (error) {
+    console.error('Error proceeding to config:', error);
+    showMessage('שגיאה במעבר לדף הגדרות', 'error');
+  }
+}
+
+// נקה timeouts כשהדף נסגר
+window.addEventListener('beforeunload', () => {
+  if (espConnectionTimeout) {
+    clearTimeout(espConnectionTimeout);
+    espConnectionTimeout = null;
+  }
+});
+
+console.log('ESP Config connection fixes loaded');
+
+async function checkESPReachability() {
+  const hosts = ['192.168.2.178'];
+
+  for (const host of hosts) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const response = await fetch(`http://${host}/`, {
+        method: 'HEAD',
+        signal: controller.signal,
+        mode: 'no-cors'
+      });
+
+      clearTimeout(timeoutId);
+      localStorage.setItem('ESP_HOST', host);
+      return true;
+    } catch (e) {
+      continue;
+    }
+  }
+  return false;
+}
+
+
+
+
+function proceedToConfig() {
+  const userName = (currentUser && currentUser.userName) ? currentUser.userName : '';
+  const url = getConfigPageUrl(userName);
+  window.location.href = url;
+}
+function getConfigPageUrl(userName) {
+  const isAndroidWebView = (typeof Android !== 'undefined');
+  return isAndroidWebView
+    ? `file:///android_asset/espConfig.html${userName ? `?userName=${encodeURIComponent(userName)}` : ''}`
+    : `${API_BASE}/espConfig${userName ? `?userName=${encodeURIComponent(userName)}` : ''}`;
+}
+function goBackToDeviceList() {
+  // חזור למצב הרגיל של בחירת מכשירים
+  updateDeviceDisplay();
+}
+// 🔧 פתיחת דף עדכון ESP בלי רישום לשרת
+function openEspConfigWithoutLogin() {
+  // בלי שם משתמש – רק פותח את הדף
+  const url = getConfigPageUrl('');
+  showMessage('פותח דף עדכון ESP...', 'info');
+  window.location.href = url;
+}
+
+// 🔧 עדכון מכשיר קיים
+function updateEspDevice() {
+  const userName = (currentUser && currentUser.userName) ? currentUser.userName : '';
+  showMessage('פותח דף עדכון מכשיר...', 'info');
+  const url = getConfigPageUrl(userName);
+  window.location.href = url;
+}
+
+    // 🚪 יציאה מהמערכת
+function logout() {
+  console.log('User logout');
+
+  try {
+    localStorage?.removeItem('authToken');
+    localStorage?.removeItem('currentUser');
+  } catch (e) {
+    console.log('Cannot remove from localStorage');
+  }
+
+  authToken = null;
+  currentUser = null;
+  devices = [];
+  selectedDevice = null;
+
+  // חזרה למסך התחברות וניקוי הודעות/טופס
+  goToStep(1);
+  const form = document.getElementById('authForm');
+  if (form) form.reset();
+  hideMessages();
+}
+
+    // 🎯 מעבר בין שלבים
+async function goToStep(step) {
+  currentStep = step;
+
+  // נקה תצוגת שלבים
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+
+  const progressBar = document.getElementById('progressBar');
+  const userBar = document.getElementById('userBar');
+  const headerTitle = document.getElementById('headerTitle');
+  const headerSubtitle = document.getElementById('headerSubtitle');
+
+  const setHeader = (title, subtitle, progress) => {
+    if (headerTitle) headerTitle.textContent = title;
+    if (headerSubtitle) headerSubtitle.textContent = subtitle;
+    if (progressBar) progressBar.style.width = progress;
+  };
+
+  switch (step) {
+    case 1: {
+      const stepEl = document.getElementById('stepLogin');
+      if (stepEl) stepEl.classList.add('active');
+      setHeader(getAuthText('title', isRegisterMode),
+                getAuthText('subtitle', isRegisterMode),
+                '33%');
+      if (userBar) userBar.classList.remove('show');
+      break;
+    }
+
+    case 2: {
+      const stepEl = document.getElementById('stepLoading');
+      if (stepEl) stepEl.classList.add('active');
+      setHeader(APP_CONFIG.screens.loading.title, 
+                APP_CONFIG.screens.loading.subtitle, 
+                '66%');
+      if (userBar) userBar.classList.add('show');
+      updateUserDisplay();
+      break;
+    }
+
+    case 3: {
+      const stepEl = document.getElementById('stepDevices');
+      if (stepEl) stepEl.classList.add('active');
+
+      if (Array.isArray(devices)) {
+        if (devices.length === 0) {
+          setHeader(APP_CONFIG.screens.devices.noDevices, 
+                    APP_CONFIG.screens.devices.noDevicesSubtitle, 
+                    '100%');
+        } else if (devices.length === 1) {
+          setHeader(APP_CONFIG.screens.devices.connecting, 
+                    'נמצא מכשיר יחיד - מתחבר אליו', 
+                    '90%');
+        } else {
+          setHeader(APP_CONFIG.screens.devices.title, 
+                    'בחר מכשיר מהרשימה להתחברות', 
+                    '100%');
+        }
+      } else {
+        setHeader(APP_CONFIG.screens.devices.title, 
+                  'בחר מכשיר מהרשימה להתחברות', 
+                  '100%');
+      }
+
+      if (userBar) userBar.classList.add('show');
+      updateUserDisplay();
+      break;
+    }
+
+    default: {
+      // ברירת מחדל: חזור למסך לוגין
+      const stepEl = document.getElementById('stepLogin');
+      if (stepEl) stepEl.classList.add('active');
+      setHeader('מערכת ניהול ESP', 'היכנס למערכת כדי לנהל את המכשירים שלך', '33%');
+      if (userBar) userBar.classList.remove('show');
+      break;
+    }
+  }
+
+  hideMessages();
+}
+
+
+    // 👤 עדכון תצוגת משתמש
+function updateUserDisplay() {
+  const nameEl = document.getElementById('currentUser');
+  const avatarEl = document.getElementById('userAvatar');
+
+  const name =
+    (typeof currentUser === 'object' && currentUser && currentUser.userName)
+      ? String(currentUser.userName)
+      : 'משתמש';
+
+  const avatar =
+    name.trim().length > 0
+      ? name.trim().charAt(0).toUpperCase()
+      : 'M';
+
+  if (nameEl) nameEl.textContent = name;
+  if (avatarEl) avatarEl.textContent = avatar;
+}
+
+    // ⚙️ הגדרת מצב טעינה לטופס אימות
+function setAuthLoading(loading) {
+  const authBtn = document.getElementById('authBtn');
+  const authBtnText = document.getElementById('authBtnText');
+  const authSpinner = document.getElementById('authSpinner');
+
+  if (!authBtn || !authBtnText || !authSpinner) return;
+
+  if (loading) {
+    authBtn.disabled = true;
+    authBtnText.style.display = 'none';
+    authSpinner.style.display = 'inline-block';
+  } else {
+    authBtn.disabled = false;
+    authBtnText.style.display = 'inline';
+    authSpinner.style.display = 'none';
+  }
+}
+
+    // 💬 ניהול הודעות
+function showMessage(message, type = 'info', durationMs) {
+  const container = document.getElementById('messageContainer');
+  if (!container) {
+    console.log(`[message:${type}]`, message);
+    return;
+  }
+
+  // נקה הודעה קודמת
+  container.innerHTML = '';
+
+  // צור הודעה חדשה
+  const el = document.createElement('div');
+  el.className = `message ${type} show`;
+  el.textContent = String(message);
+
+  container.appendChild(el);
+
+  // קבע זמן תצוגה
+  const ms = typeof durationMs === 'number'
+    ? durationMs
+    : (type === 'error' ? 5000 : 3000);
+
+  // ניהול טיימר יחיד כדי למנוע מצב של כמה טיימרים במקביל
+  if (showMessage._timer) clearTimeout(showMessage._timer);
+  showMessage._timer = setTimeout(() => {
+    if (el.parentNode) {
+      el.classList.remove('show');
+      setTimeout(() => { if (el.parentNode) el.remove(); }, 300);
+    }
+  }, ms);
+}
+
+function hideMessages() {
+  const container = document.getElementById('messageContainer');
+  if (container) container.innerHTML = '';
+
+  // נקה טיימר של showMessage אם פעיל
+  if (showMessage._timer) {
+    clearTimeout(showMessage._timer);
+    showMessage._timer = null;
+  }
+}
+
+    // 🔄 רענון אוטומטי של סטטוס מכשירים
+function startAutoRefresh() {
+  // נקה טיימר קודם אם קיים כדי למנוע כפילויות
+  if (startAutoRefresh._timer) {
+    clearInterval(startAutoRefresh._timer);
+    startAutoRefresh._timer = null;
+  }
+
+  startAutoRefresh._timer = setInterval(async () => {
+    // מרענן סטטוס ורשימת מכשירים רק כשאנחנו במסך 3 ויש מה לרענן
+    if (currentStep === 3 && Array.isArray(devices) && devices.length > 0) {
+      console.log('Auto-refresh device status');
+      try {
+        await updateDeviceStatus();
+        updateDeviceDisplay();
+      } catch (error) {
+        console.warn('Auto-refresh failed:', error);
+      }
+    }
+  }, 30000); // כל 30 שניות
+}
+
+    // 🚀 אירועי אתחול
+    // ⚡ מנסים לפתוח בקר אוטומטית מוקדם ככל האפשר (לפני שהדף נצבע במלואו)
+    document.addEventListener('DOMContentLoaded', () => {
+        checkAppUpdateSilently();   // בדיקת גרסה ברקע — לא חוסם
+        tryAutoOpenController();
+    });
+
+    // גיבוי: אם DOMContentLoaded כבר עבר מסיבה כלשהי — ננסה גם ב-load
+    window.addEventListener('load', async () => {
+        console.log('🚀 ESP Dashboard loaded');
+        checkAppUpdateSilently();
+
+        if (tryAutoOpenController()) {
+            return;   // פתיחה אוטומטית בתהליך — לא ממשיכים לזרימת login הרגילה
+        }
+
+        await initApp();
+        startAutoRefresh();
+    });
+
+    let autoOpenStarted = false;
+
+    /**
+     * חושף את דף הלוגין (מסיר את ה-splash וההסתרה המוקדמת).
+     */
+    function revealLoginUi() {
+        const st = document.getElementById('autoOpenHideStyle');
+        if (st) st.remove();
+        const sp = document.getElementById('autoOpenSplash');
+        if (sp) sp.remove();
+        const mc = document.querySelector('.main-container');
+        if (mc) mc.style.visibility = '';
+        window.__AUTO_OPEN__ = false;
+        showUpdateNoticeFromStorage();   // אם זוהתה גרסה חדשה — הצג הערה קטנה
+    }
+
+    /**
+     * פתיחה אוטומטית של בקר מיד עם עליית הדף.
+     * עדיפות 1: "כניסה למערכת" (savedControllers) → פותח את הבקר הראשון (גם אם יש כמה).
+     * עדיפות 2: רק אם רשימת הענן ריקה לגמרי — מתחבר לבקר הראשון בחיבור המקומי
+     *           (savedApPasswords).
+     * מחזיר true אם בוצעה/הותחלה פתיחה אוטומטית (ואז עוצרים את זרימת ה-login).
+     */
+    function tryAutoOpenController() {
+        if (autoOpenStarted) return true;   // כבר התחלנו — לא פותחים שוב
+
+        const params = new URLSearchParams(location.search);
+
+        // דילוג מפורש דרך ה-URL (login.html?noauto=1)
+        if (params.get('noauto') === '1') {
+            revealLoginUi();
+            return false;
+        }
+
+        // פתיחה ממוקדת של בקר שזה עתה הוגדר (חזרה מהקונפיג): login.html?open=<clientId>
+        const openId = params.get('open');
+        if (openId) {
+            autoOpenStarted = true;
+            console.log('🎯 פותח את הבקר שהוגדר כעת:', openId);
+            armRevealOnReturn();
+            openController(openId);
+            return true;
+        }
+
+        // 🔔 אם זוהה עדכון גרסה — לא פותחים בקר אוטומטית; נשארים בלוגין כדי לאפשר עדכון
+        if (hasPendingUpdate()) {
+            console.log('🔔 קיים עדכון ממתין — נשארים בדף הלוגין');
+            revealLoginUi();   // חושף את הלוגין ומציג את ההערה/ההבהוב
+            return false;
+        }
+
+        // עדיפות 1 — הבקר הראשון בענן (כל עוד יש לפחות אחד)
+        const saved = getSavedControllers();
+        if (Array.isArray(saved) && saved.length >= 1 && saved[0] && saved[0].clientId) {
+            autoOpenStarted = true;
+            console.log('🎯 פותח אוטומטית את הבקר הראשון בענן:', saved[0].clientId);
+            armRevealOnReturn();           // כשחוזרים מדף הבקר — מציגים את הלוגין (לבחירת בקר אחר)
+            openController(saved[0].clientId);
+            return true;
+        }
+
+        // עדיפות 2 — הענן ריק לגמרי → הבקר הראשון בחיבור המקומי
+        const localSsids = Object.keys(getSavedApPasswords());
+        if (localSsids.length >= 1) {
+            const ssid = localSsids[0];
+            // חיבור מקומי עובד רק באפליקציית האנדרואיד
+            if (typeof AndroidInterface !== 'undefined' &&
+                typeof AndroidInterface.connectToWifi === 'function') {
+                autoOpenStarted = true;
+                console.log('🎯 הענן ריק — מתחבר אוטומטית לבקר המקומי הראשון:', ssid);
+                // מציגים את הלוגין מתחת ל-picker, כך שביטול/סגירה יחזירו לדף תקין
+                revealLoginUi();
+                setLastLocalSsid(ssid);
+                openLocalConnectPicker();              // יוצר את ה-overlay ומציג מסך חיבור מהיר
+                setTimeout(() => quickConnectToLast(ssid), 300);  // התחברות מיידית לבקר
+                return true;
+            }
+            console.log('🌐 בקר מקומי קיים אך לא רצים באפליקציה — דילוג');
+        }
+
+        // אין מה לפתוח — מציגים את דף הלוגין הרגיל
+        revealLoginUi();
+        return false;
+    }
+
+    /**
+     * אחרי שפתחנו בקר ב-Activity חדש (אפליקציה): כשהמשתמש חוזר ללוגין
+     * (back), חושפים את הדף כדי שיוכל לבחור בקר אחר. הפתיחה לא תחזור על
+     * עצמה כי autoOpenStarted נשאר true.
+     */
+    function armRevealOnReturn() {
+        const onVis = () => {
+            if (document.visibilityState === 'visible') {
+                revealLoginUi();
+                document.removeEventListener('visibilitychange', onVis);
+            }
+        };
+        document.addEventListener('visibilitychange', onVis);
+
+        // רשת ביטחון: אם משום מה נתקענו על ה-splash ולא ניווטנו — נחשוף אחרי 25 שניות
+        setTimeout(() => {
+            if (document.getElementById('autoOpenSplash')) revealLoginUi();
+        }, 25000);
+    }
+
+    // 🛡️ טיפול בשגיאות JavaScript
+    window.addEventListener('error', (event) => {
+        console.error('💥 JavaScript Error:', event.error);
+        showMessage('שגיאת מערכת. אנא רענן את הדף.', 'error');
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+        console.error('💥 Unhandled Promise Rejection:', event.reason);
+        showMessage('שגיאת מערכת. אנא רענן את הדף.', 'error');
+    });
+
+
+    console.log('📄 ESP Dashboard JavaScript loaded successfully');
+	
+	
+	
+// פונקציה לבדיקת חיבור אינטרנט
+async function checkInternetConnectivity() {
+  console.log('בודק חיבור אינטרנט...');
+  
+  const testUrls = [
+    `${API_BASE}/api/auth/health`,
+    'https://www.google.com',
+    'https://8.8.8.8'
+  ];
+  
+  for (const url of testUrls) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch(url, {
+        method: 'HEAD',
+        signal: controller.signal,
+        cache: 'no-cache'
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok || response.type === 'opaque') {
+        console.log('✅ יש חיבור אינטרנט');
+        return true;
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+  
+  console.log('❌ אין חיבור אינטרנט');
+  return false;
+}
+
+// פונקציה למציאת רשת עם אינטרנט והתחברות אליה
+async function connectToNetworkWithInternet() {
+  console.log('מחפש רשת עם אינטרנט...');
+  showMessage('מחפש רשת זמינה עם אינטרנט...', 'info');
+  
+  try {
+    // קבל רשימת רשתות זמינות
+    let availableNetworksJson = '[]';
+    
+    if (typeof AndroidInterface !== 'undefined' && typeof AndroidInterface.getAvailableNetworks === 'function') {
+      availableNetworksJson = AndroidInterface.getAvailableNetworks();
+    } else if (typeof Android !== 'undefined' && typeof Android.getAvailableNetworks === 'function') {
+      availableNetworksJson = Android.getAvailableNetworks();
+    } else {
+      showMessage('לא ניתן לסרוק רשתות - פתח הגדרות WiFi ידנית', 'error');
+      return false;
+    }
+    
+    const availableNetworks = JSON.parse(availableNetworksJson);
+    console.log(`נמצאו ${availableNetworks.length} רשתות זמינות`);
+    
+    if (availableNetworks.length === 0) {
+      showMessage('לא נמצאו רשתות זמינות', 'error');
+      return false;
+    }
+    
+    // נסה להתחבר לרשתות שמורות לפי עוצמת אות
+    const sortedNetworks = availableNetworks
+      .filter(net => net.ssid !== 'espConfig') // אל תתחבר ל-ESP
+      .sort((a, b) => b.level - a.level); // מיין לפי עוצמת אות
+    
+    for (const network of sortedNetworks) {
+      console.log(`מנסה להתחבר לרשת: ${network.ssid}`);
+      showMessage(`מנסה להתחבר ל: ${network.ssid}...`, 'info');
+      
+      // נסה להתחבר לרשת שמורה
+      let connected = false;
+      
+      if (typeof AndroidInterface !== 'undefined' && typeof AndroidInterface.reconnectToKnownNetwork === 'function') {
+        connected = AndroidInterface.reconnectToKnownNetwork(network.ssid);
+      } else if (typeof Android !== 'undefined' && typeof Android.reconnectToKnownNetwork === 'function') {
+        connected = Android.reconnectToKnownNetwork(network.ssid);
+      }
+      
+      if (connected) {
+        // המתן קצת שהחיבור יתייצב
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // בדוק אם יש אינטרנט
+        const hasInternet = await checkInternetConnectivity();
+        
+        if (hasInternet) {
+          console.log(`✅ התחבר בהצלחה לרשת ${network.ssid} עם אינטרנט`);
+          showMessage(`התחבר בהצלחה ל: ${network.ssid}`, 'success');
+          return true;
+        } else {
+          console.log(`❌ רשת ${network.ssid} ללא אינטרנט`);
+        }
+      }
+    }
+    
+    // אם הגענו לכאן, לא מצאנו רשת עם אינטרנט
+    showMessage('לא נמצאה רשת שמורה עם אינטרנט', 'warning');
+    return false;
+    
+  } catch (error) {
+    console.error('שגיאה בחיפוש רשת עם אינטרנט:', error);
+    showMessage('שגיאה בחיפוש רשת', 'error');
+    return false;
+  }
+}
+
+
+// הוסף אינדיקטור ויזואלי במהלך בדיקת רשת
+function showNetworkCheckingIndicator() {
+  const container = document.querySelector('.main-container');
+  if (!container) return;
+  
+  const indicator = document.createElement('div');
+  indicator.id = 'networkCheckIndicator';
+  indicator.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 10000;
+    min-width: 250px;
+  `;
+  
+  indicator.innerHTML = `
+    <div class="loading-spinner" style="width: 40px; height: 40px; margin: 0 auto 20px;"></div>
+    <h3 style="margin-bottom: 10px;">בודק חיבור</h3>
+    <p style="opacity: 0.8; font-size: 14px;">מחפש רשת עם אינטרנט...</p>
+  `;
+  
+  document.body.appendChild(indicator);
+}
+
+function hideNetworkCheckingIndicator() {
+  const indicator = document.getElementById('networkCheckIndicator');
+  if (indicator) {
+    indicator.remove();
+  }
+}
+
+    (function () {
+        const label = document.getElementById('appVersionLabel');
+        if (label && typeof APP_CONFIG !== 'undefined') {
+            label.textContent = 'גרסה ' + APP_CONFIG.app.displayVersion;
+        }
+    })();
+    </script>
+</body>
+</html>
