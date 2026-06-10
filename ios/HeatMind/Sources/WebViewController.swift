@@ -160,6 +160,7 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
     func webView(_ webView: WKWebView,
                  decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        print("🧭 nav: \(navigationAction.request.url?.absoluteString ?? "nil")")
         if let url = navigationAction.request.url,
            url.isFileURL,
            url.absoluteString.contains("android_asset") {
