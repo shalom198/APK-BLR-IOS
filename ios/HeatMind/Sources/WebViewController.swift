@@ -38,6 +38,18 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
             config.userContentController.addUserScript(script)
         }
 
+        // ה-HTML המשותף בונה נתיב אנדרואיד (file:///android_asset/espConfig.html)
+        // שנחסם ע"י ה-sandbox של iOS ולא מגיע ל-decidePolicyFor. דורסים את
+        // getConfigPageUrl כך שתנווט לקובץ היחסי שבתוך חבילת האפליקציה.
+        let fixNavJS = """
+        window.getConfigPageUrl = function(userName) {
+          return 'espConfig.html' + (userName ? '?userName=' + encodeURIComponent(userName) : '');
+        };
+        """
+        config.userContentController.addUserScript(
+            WKUserScript(source: fixNavJS, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        )
+
         webView = WKWebView(frame: .zero, configuration: config)
         webView.uiDelegate = self
         webView.navigationDelegate = self
