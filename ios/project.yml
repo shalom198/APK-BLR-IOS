@@ -8,8 +8,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    # מלא את מזהה ה-Team שלך כאן, או הגדר אותו ב-Xcode → Signing & Capabilities.
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: "ZL7PN9Y55F"
 
 targets:
   HeatMind:
@@ -26,6 +25,7 @@ targets:
         buildPhase: resources
       - path: HeatMind/Resources/web/heatmind_app_icon_512.png
         buildPhase: resources
+      - path: HeatMind/Resources/Assets.xcassets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.heatmind.app
@@ -33,5 +33,6 @@ targets:
         CODE_SIGN_ENTITLEMENTS: HeatMind/Resources/HeatMind.entitlements
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: NO
