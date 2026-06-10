@@ -151,4 +151,33 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         // באנדרואיד (ללא WebChromeClient) confirm() מחזיר false.
         completionHandler(false)
     }
+
+    // MARK: - WKNavigationDelegate
+
+    /// ה-HTML המשותף מנווט לנתיבי אנדרואיד כמו file:///android_asset/espConfig.html
+    /// (למשל בלחיצה על "עדכן בקר סמוך פיזית"). ב-iOS אין נתיב כזה — מיירטים את
+    /// הניווט ומפנים לקובץ המקביל בתוך ה-bundle, תוך שמירת ה-query (?userName=...).
+    func webView(_ webView: WKWebView,
+                 decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if let url = navigationAction.request.url,
+           url.isFileURL,
+           url.path.contains("android_asset") {
+            let base = url.deletingPathExtension().lastPathComponent
+            var ext = url.pathExtension
+            if ext.isEmpty { ext = "html" }
+            if let bundleURL = Bundle.main.url(forResource: base, withExtension: ext) {
+                decisionHandler(.cancel)
+                var finalURL = bundleURL
+                if let q = url.query, !q.isEmpty,
+                   var comps = URLComponents(url: bundleURL, resolvingAgainstBaseURL: false) {
+                    comps.query = q
+                    finalURL = comps.url ?? bundleURL
+                }
+                webView.loadFileURL(finalURL, allowingReadAccessTo: bundleURL.deletingLastPathComponent())
+                return
+            }
+        }
+        decisionHandler(.allow)
+    }
 }
