@@ -1,0 +1,37 @@
+name: HeatMind
+options:
+  bundleIdPrefix: com.heatmind
+  deploymentTarget:
+    iOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    # מלא את מזהה ה-Team שלך כאן, או הגדר אותו ב-Xcode → Signing & Capabilities.
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  HeatMind:
+    type: application
+    platform: iOS
+    sources:
+      - path: HeatMind/Sources
+      - path: HeatMind/Resources/Bridge.js
+        buildPhase: resources
+      # קבצי ה-HTML/PNG משותפים עם פרויקט האנדרואיד — מקור אמת אחד.
+      - path: ../app/src/main/assets/login.html
+        buildPhase: resources
+      - path: ../app/src/main/assets/espConfig.html
+        buildPhase: resources
+      - path: ../app/src/main/assets/heatmind_app_icon_512.png
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.heatmind.app
+        INFOPLIST_FILE: HeatMind/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: HeatMind/Resources/HeatMind.entitlements
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: NO

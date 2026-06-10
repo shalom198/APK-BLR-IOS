@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ערכת ברירת־מחדל לאפליקציה -->
+    <style name="Theme.EspConnect" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- מאפשר מצב כהה אוטומטי, בלי ActionBar של המערכת -->
+        <item name="android:forceDarkAllowed">true</item>
+
+        <!-- צבעי סטטוס/ניווט—שמור אם כבר יש לך התאמות משלך -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+</resources>

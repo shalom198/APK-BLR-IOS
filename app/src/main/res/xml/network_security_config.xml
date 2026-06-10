@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- ברירת מחדל: לא לאפשר HTTP לא מוצפן -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- מספיק system; אל תאפשר user אלא אם ממש צריך -->
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+
+    <!-- smartdevice.cloud (כולל תתי-דומיינים) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">smartdevice.cloud</domain>
+    </domain-config>
+
+    <!-- שימושים מקומיים מתוך ה-WebView -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain>localhost</domain>
+        <domain>127.0.0.1</domain>
+    </domain-config>
+
+    <!-- שרת לוקאלי ברשת שלך -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain>192.168.2.178</domain>
+    </domain-config>
+
+    <!-- השרת הציבורי עובד עכשיו דרך הדומיין espserver.smartdevice.cloud ב-HTTPS,
+         שכבר מכוסה ע"י כלל smartdevice.cloud למעלה. אין צורך ב-IP/cleartext. -->
+
+    <!-- אם תרצה גם גישה ל-ESP במצב AP, בטל את ההערה הבאה -->
+    <!--
+    <domain-config cleartextTrafficPermitted="true">
+        <domain>192.168.4.1</domain>
+    </domain-config>
+    -->
+</network-security-config>
