@@ -162,10 +162,11 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         if let url = navigationAction.request.url,
            url.isFileURL,
-           url.path.contains("android_asset") {
+           url.absoluteString.contains("android_asset") {
             let base = url.deletingPathExtension().lastPathComponent
             var ext = url.pathExtension
             if ext.isEmpty { ext = "html" }
+            print("➡️ redirect android_asset → bundle: \(base).\(ext)")
             if let bundleURL = Bundle.main.url(forResource: base, withExtension: ext) {
                 decisionHandler(.cancel)
                 var finalURL = bundleURL
@@ -174,8 +175,11 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
                     comps.query = q
                     finalURL = comps.url ?? bundleURL
                 }
+                print("   loading: \(finalURL.path)")
                 webView.loadFileURL(finalURL, allowingReadAccessTo: bundleURL.deletingLastPathComponent())
                 return
+            } else {
+                print("⚠️ bundle file not found for \(base).\(ext)")
             }
         }
         decisionHandler(.allow)
