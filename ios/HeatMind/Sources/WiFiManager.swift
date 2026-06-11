@@ -25,7 +25,7 @@ final class WiFiManager: NSObject, CLLocationManagerDelegate {
 
     // MARK: - חיבור
 
-    func connect(ssid: String, passphrase: String, optionsJSON: String?, completion: @escaping (Bool) -> Void) {
+    func connect(ssid: String, passphrase: String, optionsJSON: String?, completion: @escaping (Bool, String) -> Void) {
         let config: NEHotspotConfiguration
         if passphrase.isEmpty {
             config = NEHotspotConfiguration(ssid: ssid)
@@ -39,13 +39,12 @@ final class WiFiManager: NSObject, CLLocationManagerDelegate {
                 // "כבר מחובר" נחשב הצלחה.
                 if nsErr.domain == NEHotspotConfigurationErrorDomain,
                    nsErr.code == NEHotspotConfigurationError.alreadyAssociated.rawValue {
-                    completion(true)
+                    completion(true, "alreadyAssociated")
                 } else {
-                    print("⚠️ NEHotspotConfiguration apply error: \(nsErr.localizedDescription) (code \(nsErr.code))")
-                    completion(false)
+                    completion(false, "code \(nsErr.code): \(nsErr.localizedDescription)")
                 }
             } else {
-                completion(true)
+                completion(true, "applied")
             }
         }
     }
@@ -54,7 +53,7 @@ final class WiFiManager: NSObject, CLLocationManagerDelegate {
     /// אחרת מחזירים false וה-HTML ימשיך בזרימת הסיסמה שלו.
     func reconnect(ssid: String, completion: @escaping (Bool) -> Void) -> Bool {
         if ssid == WiFiManager.espApSSID {
-            connect(ssid: ssid, passphrase: WiFiManager.espApPass, optionsJSON: nil, completion: completion)
+            connect(ssid: ssid, passphrase: WiFiManager.espApPass, optionsJSON: nil) { ok, _ in completion(ok) }
             return true
         }
         return false

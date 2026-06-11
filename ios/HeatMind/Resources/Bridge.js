@@ -70,5 +70,31 @@
         "scanForNearbyNetworks"
     ]);
 
+    // חלונית דיבאג על המסך — מאפשרת לראות מה קורה בלי לוג של Xcode (חשוב ב-TestFlight).
+    window.__hmLog = function (msg) {
+        try {
+            var box = document.getElementById('__hmDebugBox');
+            if (!box) {
+                if (!document.body) return;
+                box = document.createElement('div');
+                box.id = '__hmDebugBox';
+                box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;max-height:38%;overflow:auto;' +
+                    'z-index:2147483647;background:rgba(0,0,0,0.82);color:#0f0;' +
+                    'font:11px/1.35 monospace;padding:4px 6px;direction:ltr;white-space:pre-wrap;';
+                var clr = document.createElement('div');
+                clr.textContent = '✕ נקה';
+                clr.style.cssText = 'position:sticky;top:0;float:left;color:#f88;cursor:pointer;';
+                clr.onclick = function () { box.innerHTML = ''; box.appendChild(clr); };
+                box.appendChild(clr);
+                document.body.appendChild(box);
+            }
+            var line = document.createElement('div');
+            var d = new Date();
+            line.textContent = '[' + d.toLocaleTimeString() + '] ' + msg;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+        } catch (e) {}
+    };
+
     console.log("✓ HeatMind iOS bridge ready");
 })();

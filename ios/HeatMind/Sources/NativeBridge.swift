@@ -51,9 +51,19 @@ final class NativeBridge {
 
         // MARK: HTTP אל ה-ESP
         case "espHttpGet":
-            esp.get(str(0)) { body in completion(Self.encode(body)) }
+            let gUrl = str(0)
+            debug("GET \(gUrl)")
+            esp.get(gUrl) { [weak self] body in
+                self?.debug("GET← \(String(body.prefix(100)))")
+                completion(Self.encode(body))
+            }
         case "espHttpPost":
-            esp.post(str(0), body: str(1)) { body in completion(Self.encode(body)) }
+            let pUrl = str(0)
+            debug("POST \(pUrl)")
+            esp.post(pUrl, body: str(1)) { [weak self] body in
+                self?.debug("POST← \(String(body.prefix(100)))")
+                completion(Self.encode(body))
+            }
 
         // MARK: מידע רשת נוכחית
         case "getCurrentNetworkInfo", "getCurrentWifi":
@@ -72,7 +82,10 @@ final class NativeBridge {
             let ssid = str(0)
             let pass = str(1)
             let opts = optStr(2)
-            wifi.connect(ssid: ssid, passphrase: pass, optionsJSON: opts) { [weak self] success in
+            debug("connectToWifi → '\(ssid)'")
+            wifi.connect(ssid: ssid, passphrase: pass, optionsJSON: opts) { [weak self] success, detail in
+                self?.debug("NEHotspot: \(success ? "OK" : "FAIL") (\(detail))")
+                self?.wifi.currentSSID { s in self?.debug("currentSSID = \(s ?? "nil")") }
                 self?.notifyWifi(success: success, ssid: ssid)
             }
             completion("null") // fire-and-forget; התוצאה מגיעה דרך window.onWifiConnected
@@ -118,6 +131,12 @@ final class NativeBridge {
             print("⚠️ מתודת גשר לא ידועה: \(method)")
             completion("null")
         }
+    }
+
+    /// שולח הודעת דיבאג לחלונית שעל המסך (window.__hmLog).
+    private func debug(_ msg: String) {
+        let js = "window.__hmLog && window.__hmLog(\(Self.jsString(msg)))"
+        DispatchQueue.main.async { self.webView?.evaluateJavaScript(js, completionHandler: nil) }
     }
 
     private func notifyWifi(success: Bool, ssid: String) {
