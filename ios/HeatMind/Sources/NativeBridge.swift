@@ -98,8 +98,13 @@ final class NativeBridge {
         case "disconnectFromCurrentNetwork":
             wifi.disconnectESP()
             completion("true")
-        case "releaseEspBinding", "bindToCurrentWifi":
-            // ב-iOS ה"binding" מטופל ע"י allowsCellularAccess=false ב-ESPClient — אין מה לעשות.
+        case "releaseEspBinding":
+            // חזרה לאינטרנט: מסירים את חיבור ה-ESP, ו-iOS חוזר אוטומטית לרשת
+            // המוכרת עם אינטרנט (או לסלולרי). מקביל ל-releaseEspBinding באנדרואיד.
+            debug("releaseEspBinding → removing espConfig")
+            wifi.disconnectESP()
+            completion("null")
+        case "bindToCurrentWifi":
             completion("null")
 
         // MARK: הרשאות

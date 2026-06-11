@@ -61,7 +61,13 @@ final class WebViewController: UIViewController, WKUIDelegate, WKNavigationDeleg
         super.viewDidLoad()
         bridge = NativeBridge(webView: webView, presenter: self)
 
-        if isSubPage { addBackButton() }
+        if isSubPage {
+            addBackButton()
+        } else {
+            // עליית הדף הראשי — מסירים חיבור ESP שאולי נשאר מהפעם הקודמת,
+            // כדי שה-iPhone יחזור לרשת עם אינטרנט (או לסלולרי).
+            WiFiManager.shared.disconnectESP()
+        }
 
         let url = initialURL ?? Self.assetURL("login", "html")
         guard let url = url else {
