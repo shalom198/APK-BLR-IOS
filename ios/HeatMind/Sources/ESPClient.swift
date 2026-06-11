@@ -10,6 +10,8 @@ final class ESPClient {
 
     private let session: URLSession
     private static let timeoutSec: TimeInterval = 7
+    private static let maxRetries = 5
+    private static let retryDelay: TimeInterval = 1.2
 
     init() {
         let cfg = URLSessionConfiguration.ephemeral
@@ -44,10 +46,26 @@ final class ESPClient {
         run(req, completion)
     }
 
-    private func run(_ req: URLRequest, _ completion: @escaping (String) -> Void) {
-        session.dataTask(with: req) { data, resp, error in
-            if let error = error {
-                completion(Self.errorJSON("exception", error.localizedDescription))
+    private func run(_ req: URLRequest, attempt: Int = 0, _ completion: @escaping (String) -> Void) {
+        session.dataTask(with: req) { [weak self] data, resp, error in
+            guard let self = self else { return }
+            if let nsError = error as NSError? {
+                // מיד אחרי חיבור ל-Wi-Fi של ה-ESP יש "התחממות" של הניתוב; הבקשה
+                // הראשונה עלולה להיכשל ב-"אין אינטרנט" — מנסים שוב כמה פעמים.
+                let transient: Set<Int> = [
+                    NSURLErrorNotConnectedToInternet,   // -1009
+                    NSURLErrorCannotConnectToHost,      // -1004
+                    NSURLErrorCannotFindHost,           // -1003
+                    NSURLErrorTimedOut,                 // -1001
+                    NSURLErrorNetworkConnectionLost     // -1005
+                ]
+                if transient.contains(nsError.code) && attempt < ESPClient.maxRetries {
+                    DispatchQueue.global().asyncAfter(deadline: .now() + ESPClient.retryDelay) {
+                        self.run(req, attempt: attempt + 1, completion)
+                    }
+                    return
+                }
+                completion(Self.errorJSON("exception", nsError.localizedDescription))
                 return
             }
             guard let http = resp as? HTTPURLResponse else {
